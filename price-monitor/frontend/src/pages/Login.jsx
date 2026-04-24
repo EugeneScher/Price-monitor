@@ -1,18 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { Mail, Lock, AlertCircle } from 'lucide-react'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  
-  const { login } = useAuth()
-  const { success, error: showError } = useToast()
-  const navigate = useNavigate()
+const [email, setEmail] = useState('')
+const [password, setPassword] = useState('')
+const [errors, setErrors] = useState({})
+const [loading, setLoading] = useState(false)
+const [loggedIn, setLoggedIn] = useState(false)
+
+const { user, login } = useAuth()
+const { success, error: showError } = useToast()
+const navigate = useNavigate()
+
+useEffect(() => {
+  if (user && loggedIn) {
+    navigate('/dashboard')
+  }
+}, [user, loggedIn, navigate])
 
   const validate = () => {
     const newErrors = {}
@@ -31,23 +38,24 @@ export default function Login() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!validate()) return
-    
-    setLoading(true)
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  
+  if (!validate()) return
+  
+  setLoading(true)
 
-    try {
-      await login(email, password)
-      success('Успешный вход в систему')
-      navigate('/dashboard')
-    } catch (err) {
-      showError(err.response?.data?.error || 'Произошла ошибка при входе')
-    } finally {
-      setLoading(false)
-    }
+  try {
+    await login(email, password)
+    console.log('Token in localStorage:', localStorage.getItem('access_token')?.substring(0, 20) + '...')
+    success('Успешный вход в систему')
+    setLoggedIn(true)
+  } catch (err) {
+    showError(err.response?.data?.error || 'Произошла ошибка при входе')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -64,8 +72,8 @@ export default function Login() {
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
+              <Mail className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <input
                 id="email"
                 type="email"
@@ -74,7 +82,7 @@ export default function Login() {
                   setEmail(e.target.value)
                   if (errors.email) setErrors({ ...errors, email: '' })
                 }}
-                className={`input-field pl-10 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
+                className={`flex-1 px-3 py-2.5 bg-transparent outline-none text-gray-900 dark:text-gray-100 dark:bg-transparent ${errors.email ? 'border-red-500' : ''}`}
                 placeholder="example@mail.ru"
               />
             </div>
@@ -90,8 +98,8 @@ export default function Login() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Пароль
             </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
+              <Lock className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <input
                 id="password"
                 type="password"
@@ -100,7 +108,7 @@ export default function Login() {
                   setPassword(e.target.value)
                   if (errors.password) setErrors({ ...errors, password: '' })
                 }}
-                className={`input-field pl-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
+                className={`flex-1 px-3 py-2.5 bg-transparent outline-none text-gray-900 dark:text-gray-100 dark:bg-transparent ${errors.password ? 'border-red-500' : ''}`}
                 placeholder="••••••••"
               />
             </div>

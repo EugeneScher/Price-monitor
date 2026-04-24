@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import api from '../utils/api'
@@ -8,6 +8,42 @@ import { formatDate } from '../utils/export'
 import { AnalysisHistoryChart, CompetitorsDistribution } from '../components/Charts'
 
 const ITEMS_PER_PAGE = 10
+
+const DEMO_ANALYSES = [
+  {
+    id: 1,
+    analysis_type: 'auto',
+    competitors_count: 8,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    region: 'Москва',
+    queries: ['iPhone 15 Pro', 'Samsung Galaxy S24'],
+    avg_price: 85420,
+    lowest_price: 78990,
+    highest_price: 99990
+  },
+  {
+    id: 2,
+    analysis_type: 'manual',
+    competitors_count: 5,
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    region: 'Санкт-Петербург',
+    queries: ['Ноутбук Dell XPS'],
+    avg_price: 125000,
+    lowest_price: 119990,
+    highest_price: 135000
+  },
+  {
+    id: 3,
+    analysis_type: 'auto',
+    competitors_count: 12,
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    region: 'Москва',
+    queries: ['Sony PlayStation 5'],
+    avg_price: 49990,
+    lowest_price: 45990,
+    highest_price: 54990
+  }
+]
 
 export default function Dashboard() {
   const [analyses, setAnalyses] = useState([])
@@ -19,10 +55,17 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { success, error: showError } = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isDemo = location.state?.demo === true
 
   useEffect(() => {
-    fetchAnalyses()
-  }, [])
+    if (isDemo) {
+      setAnalyses(DEMO_ANALYSES)
+      setLoading(false)
+    } else {
+      fetchAnalyses()
+    }
+  }, [isDemo])
 
   const fetchAnalyses = async () => {
     try {
@@ -82,6 +125,15 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {isDemo && (
+        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-start gap-3">
+          <div className="text-yellow-600 dark:text-yellow-400">
+            <p className="font-medium">Демо режим</p>
+            <p className="text-sm mt-1">Это демонстрационные данные. <Link to="/register" className="underline">Зарегистрируйтесь</Link> для создания реальных анализов.</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Мои анализы</h1>

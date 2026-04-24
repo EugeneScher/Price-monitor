@@ -5,15 +5,17 @@ import { useToast } from '../context/ToastContext'
 import { Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function Register() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  
-  const { register } = useAuth()
-  const { success, error: showError } = useToast()
-  const navigate = useNavigate()
+const [email, setEmail] = useState('')
+const [password, setPassword] = useState('')
+const [confirmPassword, setConfirmPassword] = useState('')
+const [errors, setErrors] = useState({})
+const [loading, setLoading] = useState(false)
+const [status, setStatus] = useState(null) // 'success' or 'error'
+const [statusMessage, setStatusMessage] = useState('')
+
+const { register } = useAuth()
+const { success: showSuccessToast, error: showErrorToast } = useToast()
+const navigate = useNavigate()
 
   const validate = () => {
     const newErrors = {}
@@ -40,22 +42,37 @@ export default function Register() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     
     if (!validate()) return
     
     setLoading(true)
+    setStatus(null)
 
-    try {
-      await register(email, password)
-      success('Регистрация прошла успешно!')
-      navigate('/dashboard')
-    } catch (err) {
-      showError(err.response?.data?.error || 'Произошла ошибка при регистрации')
-    } finally {
-      setLoading(false)
-    }
+register(email, password)
+  .then((data) => {
+    console.log('Token in localStorage:', localStorage.getItem('access_token')?.substring(0, 20) + '...')
+    setStatus('success')
+    setStatusMessage('Регистрация успешна!')
+    showSuccessToast('Регистрация прошла успешно!')
+    setTimeout(() => navigate('/dashboard'), 100)
+  })
+      .catch((err) => {
+        const errorMsg = err.response?.data?.error || 'Произошла ошибка при регистрации'
+        setStatus('error')
+        setStatusMessage(errorMsg)
+        showErrorToast(errorMsg)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
+
+  // Also add onClick handler to button to prevent default
+  const handleButtonClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const passwordStrength = password.length >= 6 ? 'bg-green-500' : password.length >= 4 ? 'bg-yellow-500' : 'bg-gray-300'
@@ -63,6 +80,12 @@ export default function Register() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {status && (
+          <div className={`p-4 rounded-lg ${status === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+            {status === 'success' ? <CheckCircle className="h-5 w-5 inline mr-2" /> : <AlertCircle className="h-5 w-5 inline mr-2" />}
+            {statusMessage}
+          </div>
+        )}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Регистрация</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
@@ -75,8 +98,8 @@ export default function Register() {
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
+              <Mail className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <input
                 id="email"
                 type="email"
@@ -85,7 +108,7 @@ export default function Register() {
                   setEmail(e.target.value)
                   if (errors.email) setErrors({ ...errors, email: '' })
                 }}
-                className={`input-field pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                className={`flex-1 px-3 py-2.5 bg-transparent outline-none text-gray-900 dark:text-gray-100 dark:bg-transparent ${errors.email ? 'border-red-500' : ''}`}
                 placeholder="example@mail.ru"
               />
             </div>
@@ -101,8 +124,8 @@ export default function Register() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Пароль
             </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
+              <Lock className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <input
                 id="password"
                 type="password"
@@ -111,7 +134,7 @@ export default function Register() {
                   setPassword(e.target.value)
                   if (errors.password) setErrors({ ...errors, password: '' })
                 }}
-                className={`input-field pl-10 ${errors.password ? 'border-red-500' : ''}`}
+                className={`flex-1 px-3 py-2.5 bg-transparent outline-none text-gray-900 dark:text-gray-100 dark:bg-transparent ${errors.password ? 'border-red-500' : ''}`}
                 placeholder="Минимум 6 символов"
               />
             </div>
@@ -131,14 +154,15 @@ export default function Register() {
                 {errors.password}
               </p>
             )}
+            <p className="mt-1 text-xs text-gray-500">Пароль может содержать любые символы</p>
           </div>
 
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Подтверждение пароля
             </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
+              <Lock className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <input
                 id="confirmPassword"
                 type="password"
@@ -147,7 +171,7 @@ export default function Register() {
                   setConfirmPassword(e.target.value)
                   if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' })
                 }}
-                className={`input-field pl-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                className={`flex-1 px-3 py-2.5 bg-transparent outline-none text-gray-900 dark:text-gray-100 dark:bg-transparent ${errors.confirmPassword ? 'border-red-500' : ''}`}
                 placeholder="Повторите пароль"
               />
             </div>
