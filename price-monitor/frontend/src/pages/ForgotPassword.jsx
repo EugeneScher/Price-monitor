@@ -28,11 +28,11 @@ export default function ForgotPassword() {
     return (
       <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Письмо отправлено</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Письмо отправлено</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             Если email существует в системе, на него отправлены инструкции по восстановлению пароля.
           </p>
           <Link to="/login" className="btn-primary inline-block">
@@ -47,26 +47,26 @@ export default function ForgotPassword() {
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Восстановление пароля</h2>
-          <p className="mt-2 text-gray-600">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Восстановление пароля</h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Введите email, и мы отправим инструкции
           </p>
         </div>
 
         <form className="card space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="flex items-center space-x-2 p-3 bg-red-50 text-red-700 rounded-lg">
+            <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg">
               <AlertCircle className="h-5 w-5" />
               <span>{error}</span>
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
               <input
                 id="email"
                 type="email"
@@ -84,7 +84,7 @@ export default function ForgotPassword() {
           </button>
 
           <div className="text-center">
-            <Link to="/login" className="text-sm text-primary-600 hover:text-primary-500">
+            <Link to="/login" className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300">
               Вернуться ко входу
             </Link>
           </div>

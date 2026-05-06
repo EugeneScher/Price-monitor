@@ -73,7 +73,7 @@ const handleSubmit = async (e) => {
               Email
             </label>
             <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
-              <Mail className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
               <input
                 id="email"
                 type="email"
@@ -99,7 +99,7 @@ const handleSubmit = async (e) => {
               Пароль
             </label>
             <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
-              <Lock className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
               <input
                 id="password"
                 type="password"

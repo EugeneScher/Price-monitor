@@ -81,7 +81,7 @@ register(email, password)
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {status && (
-          <div className={`p-4 rounded-lg ${status === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+          <div className={`p-4 rounded-lg ${status === 'success' ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'}`}>
             {status === 'success' ? <CheckCircle className="h-5 w-5 inline mr-2" /> : <AlertCircle className="h-5 w-5 inline mr-2" />}
             {statusMessage}
           </div>
@@ -99,7 +99,7 @@ register(email, password)
               Email
             </label>
             <div className="flex items-center border border-gray-300 rounded-lg px-3 bg-white dark:bg-gray-800 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all">
-              <Mail className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
               <input
                 id="email"
                 type="email"
@@ -140,21 +140,21 @@ register(email, password)
             </div>
             {password.length > 0 && (
               <div className="mt-2 flex items-center gap-2">
-                <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div className={`h-full ${passwordStrength} transition-all`} style={{ width: `${Math.min(100, password.length * 10)}%` }}></div>
                 </div>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {password.length < 4 ? 'Слабый' : password.length < 6 ? 'Средний' : 'Надёжный'}
                 </span>
               </div>
             )}
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
                 {errors.password}
               </p>
             )}
-            <p className="mt-1 text-xs text-gray-500">Пароль может содержать любые символы</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Пароль может содержать любые символы</p>
           </div>
 
           <div>

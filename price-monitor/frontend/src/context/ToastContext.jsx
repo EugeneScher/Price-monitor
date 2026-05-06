@@ -74,7 +74,7 @@ function ToastContainer({ toasts, removeToast }) {
           className={`flex items-start space-x-3 p-4 rounded-lg border shadow-lg animate-slide-in ${styles[toast.type]}`}
         >
           <span className={iconStyles[toast.type]}>{icons[toast.type]}</span>
-          <p className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-100">{toast.message}</p>
+          <p className="flex-1 text-sm font-medium">{toast.message}</p>
           <button
             onClick={() => removeToast(toast.id)}
             className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"

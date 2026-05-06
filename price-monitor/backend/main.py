@@ -1,5 +1,7 @@
 import os
 import sys
+from dotenv import load_dotenv
+load_dotenv()
 from app import create_app, db
 
 app = create_app(os.environ.get('FLASK_ENV', 'development'))
@@ -14,7 +16,7 @@ def init_db():
 if __name__ == '__main__':
     init_db()
     
-    port = 5000
+    port = 5001
     if len(sys.argv) > 1:
         try:
             port = int(sys.argv[1])

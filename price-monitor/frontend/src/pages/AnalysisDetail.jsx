@@ -88,7 +88,7 @@ export default function AnalysisDetail() {
   if (!analysis) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Анализ не найден</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Анализ не найден</h2>
         <Link to="/dashboard" className="btn-primary">Вернуться к списку</Link>
       </div>
     )
@@ -108,14 +108,14 @@ export default function AnalysisDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900 mb-4">
+        <Link to="/dashboard" className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
           <ArrowLeft className="h-4 w-4 mr-1" />
           Назад к списку
         </Link>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Анализ #{analysis.id}</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Анализ #{analysis.id}</h1>
+            <p className="text-gray-600 dark:text-gray-400">
               {formatDate(analysis.created_at)} • Регион: {analysis.region}
             </p>
           </div>
@@ -138,8 +138,8 @@ export default function AnalysisDetail() {
             onClick={() => setActiveTab('report')}
             className={`pb-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'report'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
             }`}
           >
             Отчёт
@@ -148,8 +148,8 @@ export default function AnalysisDetail() {
             onClick={() => setActiveTab('charts')}
             className={`pb-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'charts'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
             }`}
           >
             Графики
@@ -158,8 +158,8 @@ export default function AnalysisDetail() {
             onClick={() => setActiveTab('products')}
             className={`pb-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'products'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
             }`}
           >
             Товары ({analysis.competitors?.reduce((acc, c) => acc + (c.products?.length || 0), 0) || 0})
@@ -168,8 +168,8 @@ export default function AnalysisDetail() {
             onClick={() => setActiveTab('linking')}
             className={`pb-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'linking'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
             }`}
           >
             Связывание ({analysis.product_links?.length || 0})
@@ -178,8 +178,8 @@ export default function AnalysisDetail() {
             onClick={() => setActiveTab('competitors')}
             className={`pb-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'competitors'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
             }`}
           >
             Конкуренты ({competitorList.length})
@@ -190,49 +190,49 @@ export default function AnalysisDetail() {
       {activeTab === 'report' && (
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-semibold mb-4">Сводный отчёт</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Сводный отчёт</h3>
             
             {(!analysis.product_links || analysis.product_links.length === 0) ? (
               <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">Нет данных для отображения</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">Нет данных для отображения</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
                   Для формирования отчёта необходимо связать товары на вкладке "Связывание"
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">SKU</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ваш товар</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ваша цена</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Товар конкурента</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Цена конкурента</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Разница</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">SKU</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Ваш товар</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Ваша цена</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Товар конкурента</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Цена конкурента</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Разница</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {analysis.product_links.map((link) => (
-                      <tr key={link.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-500">
+                      <tr key={link.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                           {link.competitor_product?.external_id || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                           {link.user_product?.name || 'N/A'}
                         </td>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                           {formatPrice(link.user_product?.price)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                           {link.competitor_product?.name || 'N/A'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                           {formatPrice(link.competitor_product?.price)}
                         </td>
                         <td className={`px-4 py-3 text-sm font-medium ${
-                          link.price_difference > 0 ? 'text-red-600' : 
-                          link.price_difference < 0 ? 'text-green-600' : 'text-gray-900'
+                          link.price_difference > 0 ? 'text-red-600 dark:text-red-400' : 
+                          link.price_difference < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'
                         }`}>
                           {link.price_difference !== null 
                             ? `${link.price_difference > 0 ? '+' : ''}${formatPrice(link.price_difference)}`
@@ -249,18 +249,18 @@ export default function AnalysisDetail() {
           {analysis.product_links?.length > 0 && (
             <div className="grid md:grid-cols-3 gap-4">
               <div className="card text-center">
-                <p className="text-sm text-gray-500">Всего позиций</p>
-                <p className="text-2xl font-bold text-gray-900">{analysis.product_links.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Всего позиций</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{analysis.product_links.length}</p>
               </div>
               <div className="card text-center">
-                <p className="text-sm text-gray-500">Выше ценой</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Выше ценой</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                   {analysis.product_links.filter(l => l.price_difference > 0).length}
                 </p>
               </div>
               <div className="card text-center">
-                <p className="text-sm text-gray-500">Ниже ценой</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Ниже ценой</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {analysis.product_links.filter(l => l.price_difference < 0).length}
                 </p>
               </div>
@@ -274,13 +274,13 @@ export default function AnalysisDetail() {
           {chartData.length > 0 ? (
             <>
               <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Сравнение цен</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Сравнение цен</h3>
                 <div className="h-80">
                   <PriceComparisonChart data={chartData} />
                 </div>
               </div>
               <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Разница в ценах</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Разница в ценах</h3>
                 <div className="h-80">
                   <PriceDifferenceChart data={chartData} />
                 </div>
@@ -288,8 +288,8 @@ export default function AnalysisDetail() {
             </>
           ) : (
             <div className="card text-center py-12">
-              <p className="text-gray-500">Нет данных для графиков</p>
-              <p className="text-sm text-gray-400 mt-2">
+              <p className="text-gray-500 dark:text-gray-400">Нет данных для графиков</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
                 Свяжите товары на вкладке "Связывание" для отображения графиков
               </p>
             </div>
@@ -297,25 +297,25 @@ export default function AnalysisDetail() {
         </div>
       )}
 
-      {activeTab === 'products' && (
-        <div className="grid lg:grid-cols-2 gap-6">
+          {activeTab === 'products' && (
+        <div className="grid lg:grid-cols-2 gap-6 text-gray-900 dark:text-white">
           {userCompetitor && (
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
                 Ваши товары
-                <span className="text-sm font-normal text-gray-500 ml-2">
+                <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
                   ({userCompetitor.products?.length || 0})
                 </span>
               </h3>
               {userCompetitor.products?.length > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {userCompetitor.products.map(product => (
-                    <div key={product.id} className="p-3 bg-gray-50 rounded-lg">
-                      <p className="font-medium text-gray-900">{product.name}</p>
+                    <div key={product.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
                       <div className="flex items-center space-x-4 mt-1">
-                        <p className="text-primary-600 font-semibold">{formatPrice(product.price)}</p>
+                        <p className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(product.price)}</p>
                         {product.external_id && (
-                          <span className="text-xs text-gray-500">SKU: {product.external_id}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">SKU: {product.external_id}</span>
                         )}
                       </div>
                     </div>
@@ -323,7 +323,7 @@ export default function AnalysisDetail() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">Нет товаров</p>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
                   <Link 
                     to={`/analysis/${id}/competitor/${userCompetitor.id}/selectors`}
                     className="btn-secondary text-sm"
@@ -336,30 +336,24 @@ export default function AnalysisDetail() {
           )}
 
           {competitorList.map(competitor => (
-            <div key={competitor.id} className="card">
+              <div key={competitor.id} className="card">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {competitor.domain}
-                  <span className="text-sm font-normal text-gray-500 ml-2">
+                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
                     ({competitor.products?.length || 0})
                   </span>
                 </h3>
-                <Link 
-                  to={`/analysis/${id}/competitor/${competitor.id}/selectors`}
-                  className="text-primary-600 hover:text-primary-700"
-                >
-                  <Settings className="h-5 w-5" />
-                </Link>
               </div>
               {competitor.products?.length > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {competitor.products.map(product => (
-                    <div key={product.id} className="p-3 bg-gray-50 rounded-lg">
-                      <p className="font-medium text-gray-900">{product.name}</p>
+                    <div key={product.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
                       <div className="flex items-center space-x-4 mt-1">
-                        <p className="text-gray-600">{formatPrice(product.price)}</p>
+                        <p className="text-gray-600 dark:text-gray-400">{formatPrice(product.price)}</p>
                         {product.external_id && (
-                          <span className="text-xs text-gray-500">SKU: {product.external_id}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">SKU: {product.external_id}</span>
                         )}
                       </div>
                     </div>
@@ -367,7 +361,7 @@ export default function AnalysisDetail() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">Нет товаров</p>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
                   <Link 
                     to={`/analysis/${id}/competitor/${competitor.id}/selectors`}
                     className="btn-primary text-sm"
@@ -385,8 +379,8 @@ export default function AnalysisDetail() {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold">Связывание товаров</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Связывание товаров</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Свяжите ваши товары с товарами конкурентов для формирования отчёта
               </p>
             </div>
@@ -410,8 +404,8 @@ export default function AnalysisDetail() {
           </div>
 
           {linkingMode === 'user' && (
-            <div className="mb-6 p-4 bg-primary-50 rounded-lg">
-              <p className="text-sm text-primary-700 mb-2">Выберите ваш товар:</p>
+            <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-900/30 rounded-lg">
+              <p className="text-sm text-primary-700 dark:text-primary-300 mb-2">Выберите ваш товар:</p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {userCompetitor?.products?.map(product => (
                   <button
@@ -419,12 +413,12 @@ export default function AnalysisDetail() {
                     onClick={() => setSelectedProduct(product)}
                     className={`p-3 text-left rounded-lg border-2 transition-all ${
                       selectedProduct?.id === product.id
-                        ? 'border-primary-500 bg-white'
-                        : 'border-gray-200 bg-white hover:border-gray-300'
+                        ? 'border-primary-500 bg-white dark:bg-gray-800'
+                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600'
                     }`}
                   >
-                    <p className="text-sm font-medium truncate">{product.name}</p>
-                    <p className="text-xs text-gray-500">{formatPrice(product.price)}</p>
+                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">{product.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{formatPrice(product.price)}</p>
                   </button>
                 ))}
               </div>
@@ -432,26 +426,28 @@ export default function AnalysisDetail() {
           )}
 
           {linkingMode === 'competitor' && selectedProduct && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700 mb-2">
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                 Выбранный товар: <strong>{selectedProduct.name}</strong>
               </p>
-              <p className="text-sm text-gray-500 mb-4">Выберите товар конкурента:</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Выберите товар конкурента:</p>
               <div className="grid gap-2">
                 {competitorList.map(competitor => (
-                  competitor.products?.map(product => (
-                    <button
-                      key={product.id}
-                      onClick={() => linkProducts(selectedProduct.id, product.id)}
-                      className="p-3 text-left rounded-lg border-2 border-gray-200 bg-white hover:border-primary-500 transition-all flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-500">{competitor.domain}</p>
-                      </div>
-                      <span className="text-primary-600 font-semibold">{formatPrice(product.price)}</span>
-                    </button>
-                  ))
+                  <div key={competitor.id}>
+                    {competitor.products?.map(product => (
+                      <button
+                        key={product.id}
+                        onClick={() => linkProducts(selectedProduct.id, product.id)}
+                        className="p-3 text-left rounded-lg border-2 border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 hover:border-primary-500 transition-all flex items-center justify-between w-full mb-2"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{competitor.domain}</p>
+                        </div>
+                        <span className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(product.price)}</span>
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
             </div>
@@ -466,25 +462,25 @@ export default function AnalysisDetail() {
             </button>
           )}
 
-          <h4 className="font-medium text-gray-900 mb-3">Текущие связи ({analysis.product_links?.length || 0})</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Текущие связи ({analysis.product_links?.length || 0})</h4>
           {analysis.product_links?.length > 0 ? (
             <div className="space-y-2">
               {analysis.product_links.map(link => (
-                <div key={link.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={link.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center space-x-4 flex-1">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{link.user_product?.name}</p>
-                      <p className="text-xs text-gray-500">{formatPrice(link.user_product?.price)}</p>
+                      <p className="font-medium text-sm truncate text-gray-900 dark:text-gray-100">{link.user_product?.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatPrice(link.user_product?.price)}</p>
                     </div>
-                    <span className="text-gray-400">↔</span>
+                    <span className="text-gray-400 dark:text-gray-500">↔</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{link.competitor_product?.name}</p>
-                      <p className="text-xs text-gray-500">{formatPrice(link.competitor_product?.price)}</p>
+                      <p className="font-medium text-sm truncate text-gray-900 dark:text-gray-100">{link.competitor_product?.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatPrice(link.competitor_product?.price)}</p>
                     </div>
                   </div>
                   <span className={`font-medium ml-4 ${
-                    link.price_difference > 0 ? 'text-red-600' : 
-                    link.price_difference < 0 ? 'text-green-600' : 'text-gray-600'
+                    link.price_difference > 0 ? 'text-red-600 dark:text-red-400' : 
+                    link.price_difference < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'
                   }`}>
                     {link.price_difference !== null 
                       ? `${link.price_difference > 0 ? '+' : ''}${formatPrice(link.price_difference)}`
@@ -494,25 +490,25 @@ export default function AnalysisDetail() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">Нет связанных товаров</p>
+            <p className="text-gray-500 dark:text-gray-400">Нет связанных товаров</p>
           )}
         </div>
       )}
 
       {activeTab === 'competitors' && (
         <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Список конкурентов</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Список конкурентов</h3>
           {competitorList.length > 0 ? (
             <div className="space-y-3">
               {competitorList.map((comp, index) => (
-                <div key={comp.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={comp.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center space-x-4">
-                    <span className="w-8 h-8 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center font-semibold">
+                    <span className="w-8 h-8 bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center font-semibold">
                       {index + 1}
                     </span>
                     <div>
-                      <p className="font-medium text-gray-900">{comp.domain}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{comp.domain}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {comp.products?.length || 0} товаров • {comp.competitor_type}
                       </p>
                     </div>
@@ -527,7 +523,7 @@ export default function AnalysisDetail() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">Конкуренты не найдены</p>
+            <p className="text-gray-500 dark:text-gray-400">Конкуренты не найдены</p>
           )}
         </div>
       )}

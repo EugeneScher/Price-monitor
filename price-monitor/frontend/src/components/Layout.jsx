@@ -105,11 +105,11 @@ export default function Layout({ children }) {
         {children}
       </main>
 
-      <footer className="bg-gray-800 dark:bg-gray-950 text-gray-300 dark:text-gray-500 py-8">
+      <footer className="bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <p className="text-sm">© 2026 PriceMonitor. Все права защищены.</p>
-            <p className="text-xs mt-2 text-gray-600 dark:text-gray-600">Дипломный проект</p>
+            <p className="text-xs mt-2 text-gray-500 dark:text-gray-500">Дипломный проект</p>
           </div>
         </div>
       </footer>

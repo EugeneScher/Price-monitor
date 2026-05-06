@@ -148,44 +148,44 @@ export default function Dashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="card flex items-center space-x-4">
-          <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center">
-            <BarChart3 className="h-6 w-6 text-primary-600 dark:text-primary-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            <p className="text-sm text-gray-500">Всего анализов</p>
-          </div>
-        </div>
-        <div className="card flex items-center space-x-4">
-          <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-            <Search className="h-6 w-6 text-green-600 dark:text-green-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.autoCount}</p>
-            <p className="text-sm text-gray-500">Автоматических</p>
-          </div>
-        </div>
-        <div className="card flex items-center space-x-4">
-          <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-            <Edit3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.manualCount}</p>
-            <p className="text-sm text-gray-500">Ручных</p>
-          </div>
-        </div>
-        <div className="card flex items-center space-x-4">
-          <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-            <Users className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalCompetitors}</p>
-            <p className="text-sm text-gray-500">Конкурентов</p>
-          </div>
-        </div>
-      </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="card flex items-center space-x-4">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Всего анализов</p>
+                </div>
+              </div>
+              <div className="card flex items-center space-x-4">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                  <Search className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.autoCount}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Автоматических</p>
+                </div>
+              </div>
+              <div className="card flex items-center space-x-4">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                  <Edit3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.manualCount}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Ручных</p>
+                </div>
+              </div>
+              <div className="card flex items-center space-x-4">
+                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalCompetitors}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Конкурентов</p>
+                </div>
+              </div>
+            </div>
 
       {analyses.length > 0 && (
         <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -206,7 +206,7 @@ export default function Dashboard() {
 
       {analyses.length === 0 ? (
         <div className="card text-center py-12">
-          <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <Search className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">У вас пока нет анализов</h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">Создайте первый анализ</p>
           <button onClick={() => setShowNewAnalysisModal(true)} className="btn-primary inline-flex items-center space-x-2">
@@ -246,7 +246,7 @@ export default function Dashboard() {
           {paginatedAnalyses.length === 0 ? (
             <div className="card text-center py-8">
               <Filter className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Нет анализов по заданным фильтрам</p>
+              <p className="text-gray-500 dark:text-gray-400">Нет анализов по заданным фильтрам</p>
             </div>
           ) : (
             paginatedAnalyses.map((analysis) => (
@@ -256,7 +256,7 @@ export default function Dashboard() {
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
                       {analysis.analysis_type === 'auto' ? 'Автоматический' : 'Ручной'}
                     </span>
-                    <span className="text-sm text-gray-500">{analysis.competitors_count} конкурентов</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{analysis.competitors_count} конкурентов</span>
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                     <span className="flex items-center space-x-1">
@@ -274,7 +274,7 @@ export default function Dashboard() {
                     <Eye className="h-4 w-4" />
                     <span>Открыть</span>
                   </Link>
-                  <button onClick={() => deleteAnalysis(analysis.id)} className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                  <button onClick={() => deleteAnalysis(analysis.id)} className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                     <Trash2 className="h-5 w-5" />
                   </button>
                 </div>
@@ -388,7 +388,7 @@ function NewAnalysisModal({ onClose, onSuccess }) {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Новый анализ</h2>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg">{error}</div>}
+          {error && <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg">{error}</div>}
           
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Тип анализа</label>
@@ -396,12 +396,12 @@ function NewAnalysisModal({ onClose, onSuccess }) {
               <button type="button" onClick={() => setAnalysisType('auto')} className={`p-4 border-2 rounded-lg text-left ${analysisType === 'auto' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}>
                 <Search className="h-6 w-6 text-primary-600 mb-2" />
                 <h4 className="font-semibold">Автоматический</h4>
-                <p className="text-sm text-gray-600">Поиск конкурентов</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Поиск конкурентов</p>
               </button>
               <button type="button" onClick={() => setAnalysisType('manual')} className={`p-4 border-2 rounded-lg text-left ${analysisType === 'manual' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}>
                 <Edit3 className="h-6 w-6 text-primary-600 mb-2" />
                 <h4 className="font-semibold">Ручной ввод</h4>
-                <p className="text-sm text-gray-600">Указать сайты</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Указать сайты</p>
               </button>
             </div>
           </div>
