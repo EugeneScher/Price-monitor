@@ -4,6 +4,7 @@ import api from '../utils/api'
 import { ArrowLeft, Download, Table, Link as LinkIcon, X, Check, Settings } from 'lucide-react'
 import { exportToExcel, exportToCSV, formatPrice, formatDate } from '../utils/export'
 import { PriceComparisonChart, PriceDifferenceChart } from '../components/Charts'
+import { useToast } from '../context/ToastContext'
 
 export default function AnalysisDetail() {
   const { id } = useParams()
@@ -12,6 +13,7 @@ export default function AnalysisDetail() {
   const [activeTab, setActiveTab] = useState('report')
   const [linkingMode, setLinkingMode] = useState(null)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const { error: showError } = useToast()
 
   useEffect(() => {
     fetchAnalysis()
@@ -29,7 +31,11 @@ export default function AnalysisDetail() {
   }
 
   const handleExportExcel = () => {
-    if (!analysis?.product_links?.length) return
+    console.log('Export Excel clicked, product_links:', analysis?.product_links?.length)
+    if (!analysis?.product_links?.length) {
+      showError('Нет данных для экспорта. Сначала свяжите товары.')
+      return
+    }
     
     const data = analysis.product_links.map(link => ({
       'Артикул (SKU)': link.competitor_product?.external_id || 'N/A',
@@ -42,11 +48,16 @@ export default function AnalysisDetail() {
         : 'N/A'
     }))
     
+    console.log('Exporting to Excel, data:', data.length, 'rows')
     exportToExcel(data, `analysis_${id}_${Date.now()}`)
   }
-
+ 
   const handleExportCSV = () => {
-    if (!analysis?.product_links?.length) return
+    console.log('Export CSV clicked, product_links:', analysis?.product_links?.length)
+    if (!analysis?.product_links?.length) {
+      showError('Нет данных для экспорта. Сначала свяжите товары.')
+      return
+    }
     
     const data = analysis.product_links.map(link => ({
       'SKU': link.competitor_product?.external_id || 'N/A',
@@ -59,6 +70,7 @@ export default function AnalysisDetail() {
         : 'N/A'
     }))
     
+    console.log('Exporting to CSV, data:', data.length, 'rows')
     exportToCSV(data, `analysis_${id}_${Date.now()}`)
   }
 

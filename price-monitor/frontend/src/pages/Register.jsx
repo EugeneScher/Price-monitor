@@ -56,7 +56,7 @@ register(email, password)
     setStatus('success')
     setStatusMessage('Регистрация успешна!')
     showSuccessToast('Регистрация прошла успешно!')
-    setTimeout(() => navigate('/dashboard'), 100)
+    setTimeout(() => navigate('/dashboard'), 500)
   })
       .catch((err) => {
         const errorMsg = err.response?.data?.error || 'Произошла ошибка при регистрации'

@@ -6,6 +6,18 @@ import random
 from fake_useragent import UserAgent
 from .domains import is_excluded_domain, extract_domain
 
+try:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service as ChromeService
+    from selenium.webdriver.chrome.options import Options as ChromeOptions
+    from webdriver_manager.chrome import ChromeDriverManager
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    SELENIUM_AVAILABLE = True
+except ImportError:
+    SELENIUM_AVAILABLE = False
+
 ua = UserAgent()
 
 
@@ -15,15 +27,31 @@ class YandexParser:
     def __init__(self, region='213', delay=2, use_selenium=False):
         self.region = region
         self.delay = delay
-        self.use_selenium = use_selenium
-        self.session = requests.Session()
-        self.session.headers.update({
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-        })
+        self.use_selenium = use_selenium and SELENIUM_AVAILABLE
+        if self.use_selenium:
+            self._init_selenium()
+        else:
+            self.session = requests.Session()
+            self.session.headers.update({
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+            })
+    
+    def _init_selenium(self):
+        try:
+            options = ChromeOptions()
+            options.add_argument('--headless')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument(f'user-agent={ua.random}')
+            self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+        except Exception as e:
+            print(f"Selenium init error: {e}")
+            self.use_selenium = False
+            self.session = requests.Session()
 
     def _get_headers(self):
         return {
@@ -78,6 +106,12 @@ class YandexParser:
         if result_types is None:
             result_types = ['organic', 'ads']
         
+        if self.use_selenium:
+            return self._search_selenium(query, positions, result_types)
+        else:
+            return self._search_requests(query, positions, result_types)
+    
+    def _search_requests(self, query, positions, result_types):
         all_results = {'organic': [], 'ads': []}
         
         params = {
@@ -110,6 +144,33 @@ class YandexParser:
             print(f"Parse error: {e}")
         
         return all_results
+    
+    def _search_selenium(self, query, positions, result_types):
+        all_results = {'organic': [], 'ads': []}
+        
+        try:
+            search_url = f"{self.BASE_URL}?text={quote(query)}&lr={self.region}"
+            self.driver.get(search_url)
+            time.sleep(random.uniform(2, 4))
+            
+            html = self.driver.page_source
+            results = self._parse_page(html)
+            
+            for rt in result_types:
+                if rt in results:
+                    all_results[rt] = results[rt][:positions]
+                    
+        except Exception as e:
+            print(f"Selenium search error: {e}")
+        
+        return all_results
+    
+    def __del__(self):
+        if self.use_selenium and hasattr(self, 'driver'):
+            try:
+                self.driver.quit()
+            except:
+                pass
 
     def find_competitors(self, queries, positions=5, result_types=None):
         competitors = {}

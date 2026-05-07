@@ -1,5 +1,5 @@
 from ..models import db, User, Analysis, Competitor, Product, ProductLink, SearchResult
-from ..utils import YandexParser, SiteParser, extract_domain
+from ..utils import YandexParser, DuckDuckGoParser, MockSearchParser, SiteParser, extract_domain
 
 
 class AnalysisService:
@@ -147,8 +147,8 @@ class ProductLinkService:
 class SearchService:
     @staticmethod
     def perform_search(analysis_id, queries, positions, result_types, region):
-        parser = YandexParser(region=region)
-        competitors = parser.find_competitors(queries, positions, result_types)
+        parser = MockSearchParser(region=region)
+        competitors = parser.find_competitors(queries, positions)
         
         saved_competitors = []
         for comp in competitors:
