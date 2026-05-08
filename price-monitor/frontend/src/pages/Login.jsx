@@ -63,7 +63,7 @@ const handleSubmit = async (e) => {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Вход в систему</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Или <Link to="/register" className="text-primary-600 hover:text-primary-500 dark:text-primary-400">зарегистрируйтесь</Link>
+            Или <Link to="/register" className="text-primary-600 hover:text-primary-500 dark:text-white font-medium">зарегистрируйтесь</Link>
           </p>
         </div>
 
@@ -122,7 +122,7 @@ const handleSubmit = async (e) => {
 
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <Link to="/forgot-password" className="text-primary-600 hover:text-primary-500 dark:text-primary-400">
+              <Link to="/forgot-password" className="text-primary-600 hover:text-primary-500 dark:text-white">
                 Забыли пароль?
               </Link>
             </div>

@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import requests
 from ..models import db
 from ..services import (
     AnalysisService, CompetitorService, ProductService,
     ProductLinkService, SearchService, SiteParsingService
 )
+from ..utils.domains import is_excluded_domain
 
 analysis_bp = Blueprint('analysis', __name__, url_prefix='/api/analysis')
 
@@ -30,7 +32,7 @@ def create_analysis():
         result_types = data.get('result_types', ['organic'])
         
         if not queries:
-            return jsonify({'error': 'Queries are required for auto analysis'}), 400
+            return jsonify({'error': 'Поисковые запросы обязательны для автоматического анализа'}), 400
         
         analysis = AnalysisService.create_analysis(
             user_id=current_user_id,
@@ -48,10 +50,11 @@ def create_analysis():
         )
         
         return jsonify({
-            'message': 'Analysis created successfully',
+            'message': 'Поиск завершен, выберите конкурентов',
             'analysis': analysis.to_dict(),
-            'competitors': [c.to_dict() for c in competitors]
-        }), 201
+            'found_competitors': competitors,
+            'require_selection': True
+        }), 200
     
     elif analysis_type == 'manual':
         user_site = data.get('user_site')
@@ -76,9 +79,12 @@ def create_analysis():
         saved_competitors = [user_competitor]
         
         for comp in competitors[:3]:
+            domain = comp.get('domain')
+            if domain and is_excluded_domain(domain):
+                continue
             competitor = CompetitorService.add_competitor(
                 analysis_id=analysis.id,
-                domain=comp.get('domain'),
+                domain=domain,
                 is_user_site=False
             )
             saved_competitors.append(competitor)
@@ -196,6 +202,32 @@ def delete_competitor(competitor_id):
     return jsonify({'error': 'Competitor not found'}), 404
 
 
+@analysis_bp.route('/<int:analysis_id>/select-competitors', methods=['POST'])
+@jwt_required()
+def select_competitors(analysis_id):
+    current_user_id = get_jwt_identity()
+    analysis = AnalysisService.get_analysis_by_id(analysis_id, current_user_id)
+    
+    if not analysis:
+        return jsonify({'error': 'Analysis not found'}), 404
+    
+    data = request.get_json()
+    selected_domains = data.get('selected_competitors', [])
+    
+    if not selected_domains:
+        return jsonify({'error': 'No competitors selected'}), 400
+    
+    if len(selected_domains) > 3:
+        return jsonify({'error': 'Maximum 3 competitors allowed'}), 400
+    
+    saved_competitors = SearchService.save_selected_competitors(analysis_id, selected_domains)
+    
+    return jsonify({
+        'message': 'Competitors saved successfully',
+        'competitors': [c.to_dict() for c in saved_competitors]
+    }), 200
+
+
 @analysis_bp.route('/competitor/<int:competitor_id>/parse', methods=['POST'])
 @jwt_required()
 def parse_competitor(competitor_id):
@@ -278,6 +310,40 @@ def unlink_products(link_id):
         return jsonify({'message': 'Products unlinked successfully'}), 200
     
     return jsonify({'error': 'Link not found'}), 404
+
+
+@analysis_bp.route('/check-site', methods=['POST'])
+@jwt_required()
+def check_site():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    
+    if not url:
+        return jsonify({'available': False, 'message': 'URL не указан'}), 400
+    
+    # Add protocol if not present
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    try:
+        response = requests.get(
+            url,
+            timeout=10,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        )
+        if response.status_code == 200:
+            return jsonify({'available': True, 'message': 'Сайт доступен'}), 200
+        else:
+            return jsonify({
+                'available': False, 
+                'message': f'Сайт вернул код {response.status_code}'
+            }), 200
+    except requests.exceptions.Timeout:
+        return jsonify({'available': False, 'message': 'Превышен таймаут подключения'}), 200
+    except requests.exceptions.ConnectionError:
+        return jsonify({'available': False, 'message': 'Ошибка подключения к сайту'}), 200
+    except Exception as e:
+        return jsonify({'available': False, 'message': f'Ошибка: {str(e)}'}), 200
 
 
 @analysis_bp.route('/<int:analysis_id>/report', methods=['GET'])

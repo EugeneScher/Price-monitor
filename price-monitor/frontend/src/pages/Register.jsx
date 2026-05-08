@@ -89,7 +89,7 @@ register(email, password)
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Регистрация</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Уже есть аккаунт? <Link to="/login" className="text-primary-600 hover:text-primary-500 dark:text-primary-400">Войти</Link>
+            Уже есть аккаунт? <Link to="/login" className="text-primary-600 hover:text-primary-500 dark:text-white font-medium">Войти</Link>
           </p>
         </div>
 

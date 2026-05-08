@@ -122,15 +122,28 @@ export default function SelectorsSetup() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               URL сайта
             </label>
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="input-field"
-              placeholder="https://example.ru/catalog"
-            />
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="input-field flex-1"
+                placeholder="https://example.ru/catalog"
+              />
+              {url && (
+                <a
+                  href={url.startsWith('http') ? url : `https://${url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary flex items-center space-x-1 whitespace-nowrap"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span>Открыть</span>
+                </a>
+              )}
+            </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Вставьте URL страницы с товарами
+              Вставьте URL страницы с товарами (для быстрого перехода используйте кнопку "Открыть")
             </p>
           </div>
 

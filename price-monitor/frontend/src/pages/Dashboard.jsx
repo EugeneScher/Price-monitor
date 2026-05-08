@@ -268,6 +268,20 @@ export default function Dashboard() {
                       <span>{analysis.region}</span>
                     </span>
                   </div>
+                  {analysis.queries && analysis.queries.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {analysis.queries.slice(0, 3).map((q, i) => (
+                        <span key={i} className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+                          {q}
+                        </span>
+                      ))}
+                      {analysis.queries.length > 3 && (
+                        <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+                          +{analysis.queries.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Link to={`/analysis/${analysis.id}`} className="btn-secondary flex items-center space-x-1">
@@ -342,7 +356,27 @@ function NewAnalysisModal({ onClose, onSuccess }) {
   const [competitors, setCompetitors] = useState([''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
+  const [showCompetitorSelection, setShowCompetitorSelection] = useState(false)
+  const [foundCompetitors, setFoundCompetitors] = useState([])
+  const [selectedCompetitors, setSelectedCompetitors] = useState([])
+  const [analysisId, setAnalysisId] = useState(null)
+  
+  const checkSite = (site) => {
+    if (!site) return
+    fetch('/api/analysis/check-site', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: site })
+    })
+    .then(res => res.json())
+    .then(data => {
+      window.alert(data.available ? `Сайт ${site} доступен` : `Сайт ${site} недоступен: ${data.message || 'нет ответа'}`)
+    })
+    .catch(err => {
+      window.alert(`Ошибка проверки ${site}: ${err.message}`)
+    })
+  }
+  
   const regions = [
     { value: '213', label: 'Москва' },
     { value: '2', label: 'Санкт-Петербург' },
@@ -352,6 +386,28 @@ function NewAnalysisModal({ onClose, onSuccess }) {
     { value: '120', label: 'Казань' },
     { value: '54', label: 'Самара' },
     { value: '24', label: 'Воронеж' },
+    { value: '35', label: 'Нижний Новгород' },
+    { value: '39', label: 'Ростов-на-Дону' },
+    { value: '38', label: 'Волгоград' },
+    { value: '59', label: 'Пермь' },
+    { value: '28', label: 'Уфа' },
+    { value: '48', label: 'Омск' },
+    { value: '50', label: 'Челябинск' },
+    { value: '64', label: 'Саратов' },
+    { value: '189', label: 'Тюмень' },
+    { value: '30', label: 'Красноярск' },
+    { value: '66', label: 'Ижевск' },
+    { value: '75', label: 'Ставрополь' },
+    { value: '44', label: 'Сочи' },
+    { value: '58', label: 'Пенза' },
+    { value: '57', label: 'Оренбург' },
+    { value: '192', label: 'Кемерово' },
+    { value: '69', label: 'Томск' },
+    { value: '68', label: 'Ульяновск' },
+    { value: '22', label: 'Хабаровск' },
+    { value: '26', label: 'Владивосток' },
+    { value: '70', label: 'Тольятти' },
+    { value: '49', label: 'Барнаул' },
   ]
 
   const filteredRegions = regions.filter(r => r.label.toLowerCase().includes(regionSearch.toLowerCase()))
@@ -371,11 +427,44 @@ function NewAnalysisModal({ onClose, onSuccess }) {
       if (analysisType === 'manual') {
         data.user_site = userSite
         data.competitors = competitors.filter(c => c.trim()).map(domain => ({ domain: domain.trim() }))
+      } else {
+        data.user_site = userSite
       }
       const response = await api.post('/analysis', data)
-      onSuccess(response.data.analysis)
+      if (response.data.require_selection) {
+        setAnalysisId(response.data.analysis_id)
+        setFoundCompetitors(response.data.found_competitors || [])
+        setSelectedCompetitors([])
+        setShowCompetitorSelection(true)
+      } else {
+        onSuccess(response.data.analysis)
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при создании анализа')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCompetitorSelect = (domain) => {
+    if (selectedCompetitors.includes(domain)) {
+      setSelectedCompetitors(selectedCompetitors.filter(d => d !== domain))
+    } else if (selectedCompetitors.length < 3) {
+      setSelectedCompetitors([...selectedCompetitors, domain])
+    }
+  }
+
+  const handleConfirmCompetitors = async () => {
+    if (selectedCompetitors.length === 0) return
+    setLoading(true)
+    try {
+      await api.post(`/analysis/${analysisId}/select-competitors`, {
+        competitors: selectedCompetitors.map(domain => ({ domain }))
+      })
+      setShowCompetitorSelection(false)
+      onSuccess({ id: analysisId })
+    } catch (err) {
+      setError(err.response?.data?.error || 'Ошибка при выборе конкурентов')
     } finally {
       setLoading(false)
     }
@@ -416,12 +505,59 @@ function NewAnalysisModal({ onClose, onSuccess }) {
           {analysisType === 'auto' && (
             <>
               <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ваш сайт</label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={userSite}
+                    onChange={(e) => setUserSite(e.target.value)}
+                    className="input-field flex-1"
+                    placeholder="example.ru"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => checkSite(userSite)}
+                    disabled={!userSite}
+                    className="btn-secondary whitespace-nowrap"
+                  >
+                    Проверить
+                  </button>
+                </div>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Поисковые запросы</label>
                 <textarea value={queries} onChange={(e) => setQueries(e.target.value)} className="input-field min-h-[100px]" placeholder="iphone 15&#10;samsung galaxy" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Количество позиций (1-10)</label>
                 <input type="number" min="1" max="10" value={positions} onChange={(e) => setPositions(parseInt(e.target.value) || 5)} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Тип выдачи</label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { value: 'organic', label: 'Органическая' },
+                    { value: 'cpc', label: 'Рекламная' },
+                    { value: 'favicon', label: 'С быстрыми ссылками' },
+                  ].map(type => (
+                    <label key={type.value} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={resultTypes.includes(type.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setResultTypes([...resultTypes, type.value])
+                          } else {
+                            setResultTypes(resultTypes.filter(t => t !== type.value))
+                          }
+                        }}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{type.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -430,13 +566,38 @@ function NewAnalysisModal({ onClose, onSuccess }) {
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ваш сайт</label>
-                <input type="text" value={userSite} onChange={(e) => setUserSite(e.target.value)} className="input-field" placeholder="example.ru" required />
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="text" 
+                    value={userSite} 
+                    onChange={(e) => setUserSite(e.target.value)} 
+                    className="input-field flex-1" 
+                    placeholder="example.ru" 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => checkSite(userSite)}
+                    disabled={!userSite}
+                    className="btn-secondary whitespace-nowrap"
+                  >
+                    Проверить
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Конкуренты (до 3)</label>
                 {competitors.map((comp, index) => (
                   <div key={index} className="flex items-center space-x-2 mb-2">
                     <input type="text" value={comp} onChange={(e) => { const updated = [...competitors]; updated[index] = e.target.value; setCompetitors(updated); }} className="input-field flex-1" placeholder={`Конкурент ${index + 1}`} />
+                    <button
+                      type="button"
+                      onClick={() => checkSite(comp)}
+                      disabled={!comp}
+                      className="btn-secondary whitespace-nowrap"
+                    >
+                      Проверить
+                    </button>
                     {competitors.length > 1 && <button type="button" onClick={() => setCompetitors(competitors.filter((_, i) => i !== index))} className="btn-secondary p-2">-</button>}
                   </div>
                 ))}
@@ -445,12 +606,59 @@ function NewAnalysisModal({ onClose, onSuccess }) {
             </>
           )}
 
-          <div className="flex justify-end space-x-4 pt-4 border-t">
-            <button type="button" onClick={onClose} className="btn-secondary">Отмена</button>
-            <button type="submit" disabled={loading} className="btn-primary flex items-center space-x-2">
-              {loading ? <><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Создание...</span></> : <><span>Создать</span><ChevronRight className="h-4 w-4" /></>}
-            </button>
-          </div>
+          {showCompetitorSelection ? (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Выберите конкурентов (до 3)</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Отметьте до 3 конкурентов из найденных:</p>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {foundCompetitors.map((comp, index) => (
+                    <label key={index} className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedCompetitors.includes(comp.domain) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCompetitors.includes(comp.domain)}
+                        onChange={() => handleCompetitorSelect(comp.domain)}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 dark:text-white">{comp.domain}</p>
+                        {comp.title && <p className="text-sm text-gray-500 dark:text-gray-400">{comp.title}</p>}
+                      </div>
+                      <a
+                        href={`https://${comp.domain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary-600 hover:text-primary-500 text-sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Открыть
+                      </a>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end space-x-4 pt-4 border-t">
+                <button type="button" onClick={onClose} className="btn-secondary">Отмена</button>
+                <button
+                  type="button"
+                  onClick={handleConfirmCompetitors}
+                  disabled={selectedCompetitors.length === 0 || loading}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  {loading ? <><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Сохранение...</span></> : <><span>Подтвердить ({selectedCompetitors.length}/3)</span></>}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-end space-x-4 pt-4 border-t">
+              <button type="button" onClick={onClose} className="btn-secondary">Отмена</button>
+              <button type="submit" disabled={loading} className="btn-primary flex items-center space-x-2">
+                {loading ? <><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Создание...</span></> : <><span>Создать</span><ChevronRight className="h-4 w-4" /></>}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

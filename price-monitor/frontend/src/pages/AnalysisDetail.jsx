@@ -518,12 +518,19 @@ export default function AnalysisDetail() {
                     <span className="w-8 h-8 bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center font-semibold">
                       {index + 1}
                     </span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">{comp.domain}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {comp.products?.length || 0} товаров • {comp.competitor_type}
-                      </p>
-                    </div>
+                  <div>
+                       <a
+                         href={`https://${comp.domain}`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 hover:underline"
+                       >
+                         {comp.domain}
+                       </a>
+                       <p className="text-sm text-gray-500 dark:text-gray-400">
+                         {comp.products?.length || 0} товаров • {comp.competitor_type}
+                       </p>
+                     </div>
                   </div>
                   <Link 
                     to={`/analysis/${id}/competitor/${comp.id}/selectors`}

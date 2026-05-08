@@ -150,15 +150,8 @@ class SearchService:
         parser = MockSearchParser(region=region)
         competitors = parser.find_competitors(queries, positions)
         
-        saved_competitors = []
+        # Save search results to database
         for comp in competitors:
-            competitor = CompetitorService.add_competitor(
-                analysis_id=analysis_id,
-                domain=comp['domain'],
-                competitor_type=','.join(comp['types']) if comp['types'] else 'organic'
-            )
-            saved_competitors.append(competitor)
-            
             for query in comp.get('found_in_queries', []):
                 position = comp['positions'].get(query)
                 result_type = comp['types'][0] if comp['types'] else 'organic'
@@ -175,6 +168,18 @@ class SearchService:
                 db.session.add(search_result)
         
         db.session.commit()
+        return competitors
+    
+    @staticmethod
+    def save_selected_competitors(analysis_id, selected_domains):
+        saved_competitors = []
+        for domain in selected_domains[:3]:  # Limit to 3
+            competitor = CompetitorService.add_competitor(
+                analysis_id=analysis_id,
+                domain=domain,
+                competitor_type='organic'  # Default type
+            )
+            saved_competitors.append(competitor)
         return saved_competitors
 
 
