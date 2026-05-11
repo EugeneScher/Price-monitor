@@ -377,14 +377,14 @@ function NewAnalysisModal({ onClose, onSuccess }) {
     })
   }
   
-  const regions = [
+    const regions = [
     { value: '213', label: 'Москва' },
     { value: '2', label: 'Санкт-Петербург' },
-    { value: '109', label: 'Екатеринбург' },
+    { value: '54', label: 'Екатеринбург' },
     { value: '47', label: 'Новосибирск' },
     { value: '43', label: 'Краснодар' },
     { value: '120', label: 'Казань' },
-    { value: '54', label: 'Самара' },
+    { value: '51', label: 'Самара' },
     { value: '24', label: 'Воронеж' },
     { value: '35', label: 'Нижний Новгород' },
     { value: '39', label: 'Ростов-на-Дону' },
@@ -409,6 +409,56 @@ function NewAnalysisModal({ onClose, onSuccess }) {
     { value: '70', label: 'Тольятти' },
     { value: '49', label: 'Барнаул' },
   ]
+
+  // City prefixes for domain adaptation (city name in translit)
+  const cityPrefixes = {
+    '2': 'spb',           // Санкт-Петербург
+    '54': 'ekb',          // Екатеринбург
+    '47': 'nsk',          // Новосибирск
+    '43': 'krd',          // Краснодар
+    '120': 'kazan',       // Казань
+    '51': 'samara',       // Самара
+    '24': 'voronezh',     // Воронеж
+    '35': 'nn',           // Нижний Новгород
+    '39': 'rostov',       // Ростов-на-Дону
+    '38': 'volgograd',    // Волгоград
+    '59': 'perm',         // Пермь
+    '28': 'ufa',          // Уфа
+    '48': 'omsk',         // Омск
+    '50': 'chelyabinsk',  // Челябинск
+    '64': 'saratov',      // Саратов
+    '189': 'tyumen',      // Тюмень
+    '30': 'krasnoyarsk',  // Красноярск
+    '66': 'izhevsk',      // Ижевск
+    '75': 'stavropol',    // Ставрополь
+    '44': 'sochi',        // Сочи
+    '58': 'penza',        // Пенза
+    '57': 'orenburg',     // Оренбург
+    '192': 'kemerovo',    // Кемерово
+    '69': 'tomsk',        // Томск
+    '68': 'ulyanovsk',    // Ульяновск
+    '22': 'khabarovsk',   // Хабаровск
+    '26': 'vladivostok',  // Владивосток
+    '70': 'tolyatti',     // Тольятти
+    '49': 'barnaul',      // Барнаул
+    '213': 'msk',         // Москва (default)
+  }
+
+  // Function to adapt domain based on city/region
+  const adaptDomainForCity = (domain, regionId) => {
+    // Don't adapt for Moscow (default) or if domain already has subdomain
+    if (regionId === '213' || domain.includes('.')) {
+      return domain
+    }
+
+    const prefix = cityPrefixes[regionId]
+    if (!prefix) {
+      return domain
+    }
+
+    // For domains like rus-buket.ru, return novosibirsk.rus-buket.ru
+    return `${prefix}.${domain}`
+  }
 
   const filteredRegions = regions.filter(r => r.label.toLowerCase().includes(regionSearch.toLowerCase()))
 
@@ -482,15 +532,15 @@ function NewAnalysisModal({ onClose, onSuccess }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Тип анализа</label>
             <div className="grid grid-cols-2 gap-4">
-              <button type="button" onClick={() => setAnalysisType('auto')} className={`p-4 border-2 rounded-lg text-left ${analysisType === 'auto' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}>
-                <Search className="h-6 w-6 text-primary-600 mb-2" />
-                <h4 className="font-semibold">Автоматический</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Поиск конкурентов</p>
+              <button type="button" onClick={() => setAnalysisType('auto')} className={`p-4 border-2 rounded-lg text-left transition-colors ${analysisType === 'auto' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'}`}>
+                <Search className={`h-6 w-6 mb-2 ${analysisType === 'auto' ? 'text-primary-600 dark:text-primary-400' : 'text-primary-600'}`} />
+                <h4 className={`font-semibold ${analysisType === 'auto' ? 'text-primary-800 dark:text-primary-200' : ''}`}>Автоматический</h4>
+                <p className={`text-sm ${analysisType === 'auto' ? 'text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-300'}`}>Поиск конкурентов</p>
               </button>
-              <button type="button" onClick={() => setAnalysisType('manual')} className={`p-4 border-2 rounded-lg text-left ${analysisType === 'manual' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}>
-                <Edit3 className="h-6 w-6 text-primary-600 mb-2" />
-                <h4 className="font-semibold">Ручной ввод</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Указать сайты</p>
+              <button type="button" onClick={() => setAnalysisType('manual')} className={`p-4 border-2 rounded-lg text-left transition-colors ${analysisType === 'manual' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'}`}>
+                <Edit3 className={`h-6 w-6 mb-2 ${analysisType === 'manual' ? 'text-primary-600 dark:text-primary-400' : 'text-primary-600'}`} />
+                <h4 className={`font-semibold ${analysisType === 'manual' ? 'text-primary-800 dark:text-primary-200' : ''}`}>Ручной ввод</h4>
+                <p className={`text-sm ${analysisType === 'manual' ? 'text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-300'}`}>Указать сайты</p>
               </button>
             </div>
           </div>
@@ -539,7 +589,6 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                   {[
                     { value: 'organic', label: 'Органическая' },
                     { value: 'cpc', label: 'Рекламная' },
-                    { value: 'favicon', label: 'С быстрыми ссылками' },
                   ].map(type => (
                     <label key={type.value} className="flex items-center space-x-2 cursor-pointer">
                       <input
@@ -612,31 +661,35 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Выберите конкурентов (до 3)</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Отметьте до 3 конкурентов из найденных:</p>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {foundCompetitors.map((comp, index) => (
-                    <label key={index} className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedCompetitors.includes(comp.domain) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedCompetitors.includes(comp.domain)}
-                        onChange={() => handleCompetitorSelect(comp.domain)}
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 dark:text-white">{comp.domain}</p>
-                        {comp.title && <p className="text-sm text-gray-500 dark:text-gray-400">{comp.title}</p>}
-                      </div>
-                      <a
-                        href={`https://${comp.domain}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary-600 hover:text-primary-500 text-sm"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Открыть
-                      </a>
-                    </label>
-                  ))}
+                  {foundCompetitors.map((comp, index) => {
+                    // Adapt domain for city display
+                    const displayDomain = adaptDomainForCity(comp.domain, region);
+                    return (
+                      <label key={index} className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedCompetitors.includes(comp.domain) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={selectedCompetitors.includes(comp.domain)}
+                          onChange={() => handleCompetitorSelect(comp.domain)}
+                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 dark:text-white">{displayDomain}</p>
+                          {comp.title && <p className="text-sm text-gray-500 dark:text-gray-400">{comp.title}</p>}
+                        </div>
+                        <a
+                          href={`https://${comp.domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 hover:text-primary-500 text-sm"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Открыть
+                        </a>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
               <div className="flex justify-end space-x-4 pt-4 border-t">

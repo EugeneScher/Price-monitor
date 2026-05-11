@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../utils/api'
 import { ArrowLeft, Check, Loader2, AlertCircle, Eye, ExternalLink } from 'lucide-react'
@@ -15,6 +15,26 @@ export default function SelectorsSetup() {
   const [verificationResult, setVerificationResult] = useState(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [competitor, setCompetitor] = useState(null)
+  const [competitorLoading, setCompetitorLoading] = useState(true)
+  
+  useEffect(() => {
+    const fetchCompetitor = async () => {
+      try {
+        setCompetitorLoading(true)
+        const response = await api.get(`/analysis/competitor/${competitorId}`)
+        setCompetitor(response.data.competitor)
+      } catch (err) {
+        setError(err.response?.data?.error || 'Ошибка загрузки данных конкурента')
+      } finally {
+        setCompetitorLoading(false)
+      }
+    }
+    
+    if (competitorId) {
+      fetchCompetitor()
+    }
+  }, [competitorId, api])
 
   const handleVerify = async () => {
     if (!url || !nameSelector || !priceSelector) {
@@ -94,11 +114,25 @@ export default function SelectorsSetup() {
         Назад к анализу
       </button>
 
-      <div className="card">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Настройка селекторов</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Укажите CSS-селекторы для названия товара и цены на сайте конкурента
-        </p>
+       <div className="card">
+         {competitorLoading ? (
+           <div className="text-center py-8">
+             <p className="text-gray-600 dark:text-gray-400">Загрузка данных...</p>
+           </div>
+         ) : (
+           <React.Fragment>
+             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+               {competitor && competitor.is_user_site 
+                 ? 'Настройка селекторов для вашего сайта' 
+                 : 'Настройка селекторов'}
+               </h1>
+             <p className="text-gray-600 dark:text-gray-400 mb-6">
+               {competitor && competitor.is_user_site
+                 ? 'Укажите CSS-селекторы для названия товара и цены на вашем сайте'
+                 : 'Укажите CSS-селекторы для названия товара и цены на сайте конкурента'}
+             </p>
+           </React.Fragment>
+         )}
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg flex items-start space-x-3">
@@ -118,10 +152,10 @@ export default function SelectorsSetup() {
         )}
 
         <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              URL сайта
-            </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                URL сайта конкурента
+              </label>
             <div className="flex items-center space-x-2">
               <input
                 type="text"
@@ -181,18 +215,7 @@ export default function SelectorsSetup() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Селектор SKU (артикула) <span className="text-gray-400 dark:text-gray-500 font-normal">(необязательно)</span>
-            </label>
-            <input
-              type="text"
-              value={skuSelector}
-              onChange={(e) => setSkuSelector(e.target.value)}
-              className="input-field font-mono text-sm"
-              placeholder=".sku, [data-sku], .article"
-            />
-          </div>
+
 
           <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Как найти селектор?</h4>

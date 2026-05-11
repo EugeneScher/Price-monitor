@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import requests
-from ..models import db
+from ..models import db, Competitor
 from ..services import (
     AnalysisService, CompetitorService, ProductService,
     ProductLinkService, SearchService, SiteParsingService
@@ -38,7 +38,8 @@ def create_analysis():
             user_id=current_user_id,
             analysis_type='auto',
             region=region,
-            queries=queries
+            queries=queries,
+            user_site=data.get('user_site')
         )
         
         competitors = SearchService.perform_search(
@@ -52,6 +53,7 @@ def create_analysis():
         return jsonify({
             'message': 'Поиск завершен, выберите конкурентов',
             'analysis': analysis.to_dict(),
+            'analysis_id': analysis.id,
             'found_competitors': competitors,
             'require_selection': True
         }), 200
@@ -173,6 +175,17 @@ def add_competitor(analysis_id):
     }), 201
 
 
+@analysis_bp.route('/competitor/<int:competitor_id>', methods=['GET'])
+@jwt_required()
+def get_competitor(competitor_id):
+    competitor = Competitor.query.get(competitor_id)
+    
+    if not competitor:
+        return jsonify({'error': 'Competitor not found'}), 404
+    
+    return jsonify({'competitor': competitor.to_dict()}), 200
+
+
 @analysis_bp.route('/competitor/<int:competitor_id>', methods=['PUT'])
 @jwt_required()
 def update_competitor(competitor_id):
@@ -212,7 +225,7 @@ def select_competitors(analysis_id):
         return jsonify({'error': 'Analysis not found'}), 404
     
     data = request.get_json()
-    selected_domains = data.get('selected_competitors', [])
+    selected_domains = data.get('competitors', [])
     
     if not selected_domains:
         return jsonify({'error': 'No competitors selected'}), 400
@@ -220,7 +233,8 @@ def select_competitors(analysis_id):
     if len(selected_domains) > 3:
         return jsonify({'error': 'Maximum 3 competitors allowed'}), 400
     
-    saved_competitors = SearchService.save_selected_competitors(analysis_id, selected_domains)
+    domain_names = [c.get('domain') if isinstance(c, dict) else c for c in selected_domains]
+    saved_competitors = SearchService.save_selected_competitors(analysis_id, domain_names)
     
     return jsonify({
         'message': 'Competitors saved successfully',

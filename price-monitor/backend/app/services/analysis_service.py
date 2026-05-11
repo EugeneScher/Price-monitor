@@ -4,12 +4,13 @@ from ..utils import YandexParser, DuckDuckGoParser, MockSearchParser, SiteParser
 
 class AnalysisService:
     @staticmethod
-    def create_analysis(user_id, analysis_type, region, queries):
+    def create_analysis(user_id, analysis_type, region, queries, user_site=None):
         analysis = Analysis(
             user_id=user_id,
             analysis_type=analysis_type,
             region=region,
-            queries='\n'.join(queries) if isinstance(queries, list) else queries
+            queries='\n'.join(queries) if isinstance(queries, list) else queries,
+            user_site=user_site
         )
         db.session.add(analysis)
         db.session.commit()
@@ -147,15 +148,35 @@ class ProductLinkService:
 class SearchService:
     @staticmethod
     def perform_search(analysis_id, queries, positions, result_types, region):
-        parser = MockSearchParser(region=region)
-        competitors = parser.find_competitors(queries, positions)
+        # Default to organic if no result_types specified
+        if result_types is None:
+            result_types = ['organic']
+             
+        # Use YandexParser for real search (can be switched to DuckDuckGo or others)
+        parser = None
+        try:
+            from ..utils import YandexParser
+            parser = YandexParser(region=region)
+        except ImportError:
+            # Fallback to DuckDuckGo if Yandex not available
+            from ..utils import DuckDuckGoParser
+            parser = DuckDuckGoParser(region=region)
+         
+        competitors = parser.find_competitors(queries, positions, result_types)
         
+        # If real parser returns no results, fall back to mock parser
+        if not competitors:
+            from ..utils import MockSearchParser
+            mock_parser = MockSearchParser(region=region)
+            competitors = mock_parser.find_competitors(queries, positions, result_types)
+         
         # Save search results to database
         for comp in competitors:
             for query in comp.get('found_in_queries', []):
                 position = comp['positions'].get(query)
+                # Get the first result type for this query-domain pair
                 result_type = comp['types'][0] if comp['types'] else 'organic'
-                
+                 
                 search_result = SearchResult(
                     analysis_id=analysis_id,
                     query=query,
@@ -166,7 +187,7 @@ class SearchService:
                     url=''
                 )
                 db.session.add(search_result)
-        
+         
         db.session.commit()
         return competitors
     

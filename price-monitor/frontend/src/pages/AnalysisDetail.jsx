@@ -309,43 +309,67 @@ export default function AnalysisDetail() {
         </div>
       )}
 
-          {activeTab === 'products' && (
-        <div className="grid lg:grid-cols-2 gap-6 text-gray-900 dark:text-white">
-          {userCompetitor && (
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                Ваши товары
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
-                  ({userCompetitor.products?.length || 0})
-                </span>
-              </h3>
-              {userCompetitor.products?.length > 0 ? (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {userCompetitor.products.map(product => (
-                    <div key={product.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
-                      <div className="flex items-center space-x-4 mt-1">
-                        <p className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(product.price)}</p>
-                        {product.external_id && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">SKU: {product.external_id}</span>
-                        )}
+       {activeTab === 'products' && (
+         <div className="lg:grid-cols-2 gap-6 text-gray-900 dark:text-white">
+           {userCompetitor && (
+             <div className="card">
+               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                 Ваши товары
+                 <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                   ({userCompetitor.products?.length || 0})
+                 </span>
+               </h3>
+               {userCompetitor.products?.length > 0 ? (
+                 <div className="space-y-2 max-h-96 overflow-y-auto">
+                   {userCompetitor.products.map(product => (
+                     <div key={product.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                       <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
+                       <div className="flex items-center space-x-4 mt-1">
+                         <p className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(product.price)}</p>
+                         {product.external_id && (
+                           <span className="text-xs text-gray-500 dark:text-gray-400">SKU: {product.external_id}</span>
+                         )}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        URL вашего сайта
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          id="user-site-url"
+                          placeholder="Ваш сайт (например: example.ru)"
+                          className="input-field flex-1"
+                        />
+                        <button
+                          onClick={() => {
+                            const url = document.getElementById('user-site-url').value.trim();
+                            if (url) {
+                              // TODO: Implement saving user site URL
+                              alert(`URL будет сохранен: ${url}`);
+                            } else {
+                              alert('Пожалуйста, введите URL сайта');
+                            }
+                          }}
+                          className="btn-secondary whitespace-nowrap"
+                        >
+                          Сохранить
+                        </button>
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Укажите URL вашего сайта для сравнения цен
+                      </p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
-                  <Link 
-                    to={`/analysis/${id}/competitor/${userCompetitor.id}/selectors`}
-                    className="btn-secondary text-sm"
-                  >
-                    Настроить селекторы
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
+                  </div>
+                )}
+              </div>
+            )}
 
           {competitorList.map(competitor => (
               <div key={competitor.id} className="card">

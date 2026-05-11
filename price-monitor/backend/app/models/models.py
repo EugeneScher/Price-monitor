@@ -38,6 +38,7 @@ class Analysis(db.Model):
     analysis_type = db.Column(db.String(20), nullable=False)
     region = db.Column(db.String(100), nullable=False)
     queries = db.Column(db.Text)
+    user_site = db.Column(db.String(255))  # URL of the user's site for comparison
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -50,6 +51,7 @@ class Analysis(db.Model):
             'analysis_type': self.analysis_type,
             'region': self.region,
             'queries': self.queries.split('\n') if self.queries else [],
+            'user_site': self.user_site,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'competitors_count': self.competitors.count()
         }
