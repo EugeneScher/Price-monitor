@@ -37,13 +37,23 @@ def create_analysis():
         if not queries:
             return jsonify({'error': 'Поисковые запросы обязательны для автоматического анализа'}), 400
         
+        user_site = data.get('user_site')
+        
         analysis = AnalysisService.create_analysis(
             user_id=current_user_id,
             analysis_type='auto',
             region=region,
             queries=queries,
-            user_site=data.get('user_site')
+            user_site=user_site
         )
+        
+        # Add user's site as competitor immediately
+        if user_site:
+            CompetitorService.add_competitor(
+                analysis_id=analysis.id,
+                domain=user_site,
+                is_user_site=True
+            )
         
         competitors = SearchService.perform_search(
             analysis_id=analysis.id,
@@ -166,10 +176,11 @@ def add_competitor(analysis_id):
     if not domain:
         return jsonify({'error': 'Domain is required'}), 400
     
+    is_user_site = data.get('is_user_site', False)
     competitor = CompetitorService.add_competitor(
         analysis_id=analysis_id,
         domain=domain,
-        is_user_site=False
+        is_user_site=is_user_site
     )
     
     return jsonify({

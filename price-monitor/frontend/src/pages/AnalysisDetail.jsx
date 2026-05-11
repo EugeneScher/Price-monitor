@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../utils/api'
 import { ArrowLeft, Download, Table, Link as LinkIcon, X, Check, Settings } from 'lucide-react'
+import { getRegionName } from '../utils/regions'
 import { exportToExcel, exportToCSV, formatPrice, formatDate } from '../utils/export'
 import { PriceComparisonChart, PriceDifferenceChart } from '../components/Charts'
 import { useToast } from '../context/ToastContext'
@@ -130,7 +131,7 @@ export default function AnalysisDetail() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Анализ #{analysis.id}</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              {formatDate(analysis.created_at)} • Регион: {analysis.region}
+              {formatDate(analysis.created_at)} • Регион: {getRegionName(analysis.region)}
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -385,7 +386,14 @@ export default function AnalysisDetail() {
               <div key={competitor.id} className="card">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {competitor.domain}
+                  <a
+                    href={`https://${competitor.domain.replace(/^https?:\/\//, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    {competitor.domain}
+                  </a>
                   <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
                     ({competitor.products?.length || 0})
                   </span>
@@ -488,7 +496,14 @@ export default function AnalysisDetail() {
                       >
                         <div>
                           <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{competitor.domain}</p>
+                          <a
+                            href={`https://${competitor.domain.replace(/^https?:\/\//, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary-500 dark:text-primary-400 hover:underline"
+                          >
+                            {competitor.domain}
+                          </a>
                         </div>
                         <span className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(product.price)}</span>
                       </button>

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import api from '../utils/api'
 import { Plus, Calendar, Globe, Trash2, Eye, Search, Edit3, ChevronLeft, ChevronRight, Filter, TrendingUp, Users, BarChart3 } from 'lucide-react'
+import { REGIONS, getRegionName } from '../utils/regions'
 import { formatDate } from '../utils/export'
 import { AnalysisHistoryChart, CompetitorsDistribution } from '../components/Charts'
 
@@ -91,9 +92,9 @@ export default function Dashboard() {
   const filteredAnalyses = useMemo(() => {
     return analyses.filter(a => {
       const matchesType = filterType === 'all' || a.analysis_type === filterType
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         a.queries?.some(q => q.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        a.region?.toLowerCase().includes(searchQuery.toLowerCase())
+        getRegionName(a.region)?.toLowerCase().includes(searchQuery.toLowerCase())
       return matchesType && matchesSearch
     })
   }, [analyses, filterType, searchQuery])
@@ -265,7 +266,7 @@ export default function Dashboard() {
                     </span>
                     <span className="flex items-center space-x-1">
                       <Globe className="h-4 w-4" />
-                      <span>{analysis.region}</span>
+                      <span>{getRegionName(analysis.region)}</span>
                     </span>
                   </div>
                   {analysis.queries && analysis.queries.length > 0 && (
@@ -377,38 +378,7 @@ function NewAnalysisModal({ onClose, onSuccess }) {
     }
   }
   
-    const regions = [
-    { value: '213', label: 'Москва' },
-    { value: '2', label: 'Санкт-Петербург' },
-    { value: '54', label: 'Екатеринбург' },
-    { value: '47', label: 'Новосибирск' },
-    { value: '43', label: 'Краснодар' },
-    { value: '120', label: 'Казань' },
-    { value: '51', label: 'Самара' },
-    { value: '24', label: 'Воронеж' },
-    { value: '35', label: 'Нижний Новгород' },
-    { value: '39', label: 'Ростов-на-Дону' },
-    { value: '38', label: 'Волгоград' },
-    { value: '59', label: 'Пермь' },
-    { value: '28', label: 'Уфа' },
-    { value: '48', label: 'Омск' },
-    { value: '50', label: 'Челябинск' },
-    { value: '64', label: 'Саратов' },
-    { value: '189', label: 'Тюмень' },
-    { value: '30', label: 'Красноярск' },
-    { value: '66', label: 'Ижевск' },
-    { value: '75', label: 'Ставрополь' },
-    { value: '44', label: 'Сочи' },
-    { value: '58', label: 'Пенза' },
-    { value: '57', label: 'Оренбург' },
-    { value: '192', label: 'Кемерово' },
-    { value: '69', label: 'Томск' },
-    { value: '68', label: 'Ульяновск' },
-    { value: '22', label: 'Хабаровск' },
-    { value: '26', label: 'Владивосток' },
-    { value: '70', label: 'Тольятти' },
-    { value: '49', label: 'Барнаул' },
-  ]
+    const regions = REGIONS
 
   // City prefixes for domain adaptation (city name in translit)
   const cityPrefixes = {
@@ -710,7 +680,15 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                             />
                           </td>
                           <td className="py-3">
-                            <span className="font-medium text-gray-900 dark:text-white">{displayDomain}</span>
+                            <a
+                              href={`https://${displayDomain}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="font-medium text-primary-600 dark:text-primary-400 hover:underline"
+                            >
+                              {displayDomain}
+                            </a>
                           </td>
                           <td className="py-3 text-center">
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300">

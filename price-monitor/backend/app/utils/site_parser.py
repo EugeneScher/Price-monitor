@@ -3,20 +3,30 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import time
 import random
-from fake_useragent import UserAgent
 import re
 
-ua = UserAgent()
+REAL_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+
+try:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service as ChromeService
+    from selenium.webdriver.chrome.options import Options as ChromeOptions
+    from webdriver_manager.chrome import ChromeDriverManager
+    from selenium.webdriver.common.by import By
+    SELENIUM_AVAILABLE = True
+except ImportError:
+    SELENIUM_AVAILABLE = False
 
 
 class SiteParser:
     def __init__(self, delay=1):
         self.delay = delay
         self.session = requests.Session()
+        self.driver = None
         
     def _get_headers(self):
         return {
-            'User-Agent': ua.random,
+            'User-Agent': REAL_UA,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
         }
@@ -39,13 +49,41 @@ class SiteParser:
         return []
 
     def get_page(self, url):
+        html = self._get_page_requests(url)
+        if html:
+            return html
+        if SELENIUM_AVAILABLE:
+            return self._get_page_selenium(url)
+        return None
+
+    def _get_page_requests(self, url):
         try:
             time.sleep(random.uniform(self.delay * 0.5, self.delay * 1.5))
             response = self.session.get(url, headers=self._get_headers(), timeout=15)
             response.raise_for_status()
             return response.text
         except Exception as e:
-            print(f"Error fetching {url}: {e}")
+            print(f"Requests fetch error for {url}: {e}")
+            return None
+
+    def _get_page_selenium(self, url):
+        try:
+            if not self.driver:
+                options = ChromeOptions()
+                options.add_argument('--headless')
+                options.add_argument('--no-sandbox')
+                options.add_argument('--disable-dev-shm-usage')
+                options.add_argument('--window-size=1280,1024')
+                options.add_argument(f'user-agent={REAL_UA}')
+                self.driver = webdriver.Chrome(
+                    service=ChromeService(ChromeDriverManager().install()),
+                    options=options
+                )
+            self.driver.get(url)
+            time.sleep(random.uniform(3, 5))
+            return self.driver.page_source
+        except Exception as e:
+            print(f"Selenium fetch error for {url}: {e}")
             return None
 
     def parse_products(self, html, name_selector, price_selector, sku_selector=None):
@@ -55,8 +93,11 @@ class SiteParser:
         soup = BeautifulSoup(html, 'lxml')
         products = []
         
-        name_elements = self._try_selectors(soup, name_selector.split(',') if ',' in name_selector else [name_selector])
-        price_elements = self._try_selectors(soup, price_selector.split(',') if ',' in price_selector else [price_selector])
+        name_selectors = name_selector.split(',') if ',' in name_selector else [name_selector]
+        price_selectors = price_selector.split(',') if ',' in price_selector else [price_selector]
+        
+        name_elements = self._try_selectors(soup, name_selectors)
+        price_elements = self._try_selectors(soup, price_selectors)
         sku_elements = self._try_selectors(soup, [sku_selector]) if sku_selector else []
         
         min_len = min(len(name_elements), len(price_elements))
@@ -116,3 +157,10 @@ class SiteParser:
             'count': len(elements),
             'sample_texts': sample_texts
         }
+
+    def __del__(self):
+        if hasattr(self, 'driver') and self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
