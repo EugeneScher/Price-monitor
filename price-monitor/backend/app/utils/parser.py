@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import quote, urlparse
 import time
 import random
-from fake_useragent import UserAgent
-from .domains import is_excluded_domain, extract_domain
+from .domains import extract_domain
+
+REAL_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 
 try:
     from selenium import webdriver
@@ -12,188 +13,178 @@ try:
     from selenium.webdriver.chrome.options import Options as ChromeOptions
     from webdriver_manager.chrome import ChromeDriverManager
     from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
     SELENIUM_AVAILABLE = True
 except ImportError:
     SELENIUM_AVAILABLE = False
-
-ua = UserAgent()
 
 
 class YandexParser:
     BASE_URL = 'https://yandex.ru/search/'
     
-    def __init__(self, region='213', delay=2, use_selenium=False):
+    def __init__(self, region='213', delay=2, use_selenium=True):
         self.region = region
         self.delay = delay
-        self.use_selenium = use_selenium and SELENIUM_AVAILABLE
-        if self.use_selenium:
-            self._init_selenium()
-        else:
-            self.session = requests.Session()
-            self.session.headers.update({
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-            })
-    
-    def _init_selenium(self):
-        try:
-            options = ChromeOptions()
-            options.add_argument('--headless')
-            options.add_argument('--no-sandbox')
-            options.add_argument('--disable-dev-shm-usage')
-            options.add_argument(f'user-agent={ua.random}')
-            self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
-        except Exception as e:
-            print(f"Selenium init error: {e}")
-            self.use_selenium = False
-            self.session = requests.Session()
-
-    def _get_headers(self):
-        return {
-            'User-Agent': ua.random,
+        self.use_selenium = SELENIUM_AVAILABLE and use_selenium
+        self.driver = None
+        self.session = requests.Session()
+        self.session.headers.update({
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-        }
-
-    def _parse_page(self, html):
-        soup = BeautifulSoup(html, 'lxml')
-        results = {'organic': [], 'ads': []}
-        
-        ads = soup.select('.OrganicPureEntity, .serp-item[data-type="adv"]')
-        for idx, item in enumerate(ads, 1):
-            try:
-                link_elem = item.select_one('a.OrganicTitle-link, .OrganicTitle a')
-                title_elem = item.select_one('h2.OrganicTitle, .OrganicTitle')
-                if link_elem:
-                    url = link_elem.get('href', '')
-                    title = title_elem.get_text(strip=True) if title_elem else ''
-                    results['ads'].append({
-                        'position': idx,
-                        'domain': extract_domain(url),
-                        'title': title,
-                        'url': url,
-                        'type': 'ad'
-                    })
-            except Exception:
-                continue
-        
-        organic_items = soup.select('.serp-item:not([data-type="adv"])')
-        for idx, item in enumerate(organic_items, 1):
-            try:
-                link_elem = item.select_one('a.OrganicTitle-link')
-                title_elem = item.select_one('h2.OrganicTitle')
-                if link_elem:
-                    url = link_elem.get('href', '')
-                    title = title_elem.get_text(strip=True) if title_elem else ''
-                    results['organic'].append({
-                        'position': idx,
-                        'domain': extract_domain(url),
-                        'title': title,
-                        'url': url,
-                        'type': 'organic'
-                    })
-            except Exception:
-                continue
-        
-        return results
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': REAL_UA,
+            'DNT': '1',
+        })
 
     def search(self, query, positions=5, result_types=None):
         if result_types is None:
             result_types = ['organic', 'ads']
-        
-        if self.use_selenium:
-            return self._search_selenium(query, positions, result_types)
-        else:
-            return self._search_requests(query, positions, result_types)
-    
-    def _search_requests(self, query, positions, result_types):
         all_results = {'organic': [], 'ads': []}
         
-        params = {
-            'text': query,
-            'lr': self.region,
-            'nocfg': '1',
-            'numdoc': str(positions * 2)
-        }
-        
+        # Try requests-based first
         try:
             time.sleep(random.uniform(self.delay * 0.5, self.delay * 1.5))
-            
+            params = {
+                'text': query,
+                'lr': self.region,
+                'nocfg': '1',
+                'numdoc': str(positions * 2)
+            }
             response = self.session.get(
                 self.BASE_URL,
                 params=params,
-                headers=self._get_headers(),
                 timeout=15
             )
-            response.raise_for_status()
-            
-            results = self._parse_page(response.text)
-            
-            for rt in result_types:
-                if rt in results:
-                    all_results[rt] = results[rt][:positions]
-            
-        except requests.RequestException as e:
-            print(f"Request error: {e}")
-        except Exception as e:
-            print(f"Parse error: {e}")
+            if response.status_code == 200:
+                results = self._parse_page(response.text)
+                for rt in result_types:
+                    if rt in results and results[rt]:
+                        all_results[rt] = results[rt][:positions]
+                if all_results['organic'] or all_results['ads']:
+                    return all_results
+        except Exception:
+            pass
+        
+        # Fallback: Selenium
+        if self.use_selenium:
+            try:
+                all_results = self._search_selenium(query, positions, result_types)
+            except Exception as e:
+                print(f"Yandex selenium error: {e}")
         
         return all_results
     
     def _search_selenium(self, query, positions, result_types):
         all_results = {'organic': [], 'ads': []}
         
-        try:
-            search_url = f"{self.BASE_URL}?text={quote(query)}&lr={self.region}"
-            self.driver.get(search_url)
-            time.sleep(random.uniform(2, 4))
-            
-            html = self.driver.page_source
-            results = self._parse_page(html)
-            
-            for rt in result_types:
-                if rt in results:
-                    all_results[rt] = results[rt][:positions]
-                    
-        except Exception as e:
-            print(f"Selenium search error: {e}")
+        if not self.driver:
+            options = ChromeOptions()
+            options.add_argument('--headless')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--window-size=1280,1024')
+            options.add_argument(f'user-agent={REAL_UA}')
+            self.driver = webdriver.Chrome(
+                service=ChromeService(ChromeDriverManager().install()),
+                options=options
+            )
+        
+        search_url = f"{self.BASE_URL}?text={quote(query)}&lr={self.region}&numdoc={positions * 2}"
+        self.driver.get(search_url)
+        time.sleep(random.uniform(3, 5))
+        
+        html = self.driver.page_source
+        results = self._parse_page(html)
+        
+        for rt in result_types:
+            if rt in results:
+                all_results[rt] = results[rt][:positions]
         
         return all_results
     
+    def _parse_page(self, html):
+        soup = BeautifulSoup(html, 'lxml')
+        results = {'organic': [], 'ads': []}
+        
+        # Ads
+        ads = soup.select('.OrganicPureEntity, .serp-item[data-type="adv"]')
+        for idx, item in enumerate(ads, 1):
+            try:
+                link_elem = item.select_one('a.OrganicTitle-link, .OrganicTitle a, a[href]')
+                title_elem = item.select_one('h2.OrganicTitle, .OrganicTitle')
+                if link_elem:
+                    url = link_elem.get('href', '')
+                    title = title_elem.get_text(strip=True) if title_elem else ''
+                    if url and not url.startswith('#'):
+                        results['ads'].append({
+                            'position': idx,
+                            'domain': extract_domain(url),
+                            'title': title,
+                            'url': url,
+                            'type': 'ad'
+                        })
+            except Exception:
+                continue
+        
+        # Organic
+        organic_items = soup.select('.serp-item:not([data-type="adv"])')
+        for idx, item in enumerate(organic_items, 1):
+            try:
+                link_elem = item.select_one('a.OrganicTitle-link, a[href]')
+                title_elem = item.select_one('h2.OrganicTitle, .OrganicTitle')
+                if link_elem:
+                    url = link_elem.get('href', '')
+                    title = title_elem.get_text(strip=True) if title_elem else ''
+                    if url and not url.startswith('#'):
+                        results['organic'].append({
+                            'position': idx,
+                            'domain': extract_domain(url),
+                            'title': title,
+                            'url': url,
+                            'type': 'organic'
+                        })
+            except Exception:
+                continue
+        
+        return results
+
     def __del__(self):
-        if self.use_selenium and hasattr(self, 'driver'):
+        if hasattr(self, 'driver') and self.driver:
             try:
                 self.driver.quit()
-            except:
+            except Exception:
                 pass
 
     def find_competitors(self, queries, positions=5, result_types=None):
         competitors = {}
-        
         for query in queries:
             results = self.search(query, positions, result_types)
-            
             for result_type in result_types or ['organic', 'ads']:
                 for item in results.get(result_type, []):
                     domain = item['domain']
-                    if not is_excluded_domain(domain):
-                        if domain not in competitors:
-                            competitors[domain] = {
-                                'domain': domain,
-                                'found_in_queries': [],
-                                'positions': {},
-                                'types': []
-                            }
-                        competitors[domain]['found_in_queries'].append(query)
-                        competitors[domain]['positions'][query] = item['position']
-                        if result_type not in competitors[domain]['types']:
-                            competitors[domain]['types'].append(result_type)
-            
-            time.sleep(random.uniform(1, 2))
-        
+                    if self._exclude_domain(domain):
+                        continue
+                    if domain not in competitors:
+                        competitors[domain] = {
+                            'domain': domain,
+                            'found_in_queries': [],
+                            'positions': {},
+                            'types': []
+                        }
+                    competitors[domain]['found_in_queries'].append(query)
+                    competitors[domain]['positions'][query] = item['position']
+                    if result_type not in competitors[domain]['types']:
+                        competitors[domain]['types'].append(result_type)
         return list(competitors.values())
+
+    @staticmethod
+    def _exclude_domain(domain):
+        domain_lower = domain.lower()
+        EXCLUDED = ['google.com', 'yandex.ru', 'yandex.com', 'duckduckgo.com',
+                    'facebook.com', 'instagram.com', 'youtube.com',
+                    'vk.com', 'ok.ru', 't.me', 'mail.ru']
+        for exc in EXCLUDED:
+            if exc in domain_lower:
+                return True
+        return False

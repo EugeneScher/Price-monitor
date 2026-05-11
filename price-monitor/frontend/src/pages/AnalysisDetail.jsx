@@ -13,6 +13,8 @@ export default function AnalysisDetail() {
   const [activeTab, setActiveTab] = useState('report')
   const [linkingMode, setLinkingMode] = useState(null)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [userSiteUrl, setUserSiteUrl] = useState('')
+  const [userSiteStatus, setUserSiteStatus] = useState(null)
   const { error: showError } = useToast()
 
   useEffect(() => {
@@ -334,39 +336,47 @@ export default function AnalysisDetail() {
                    ))}
                  </div>
                 ) : (
-                  <div className="space-y-4">
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        URL вашего сайта
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          id="user-site-url"
-                          placeholder="Ваш сайт (например: example.ru)"
-                          className="input-field flex-1"
-                        />
-                        <button
-                          onClick={() => {
-                            const url = document.getElementById('user-site-url').value.trim();
-                            if (url) {
-                              // TODO: Implement saving user site URL
-                              alert(`URL будет сохранен: ${url}`);
-                            } else {
-                              alert('Пожалуйста, введите URL сайта');
-                            }
-                          }}
-                          className="btn-secondary whitespace-nowrap"
-                        >
-                          Сохранить
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Укажите URL вашего сайта для сравнения цен
-                      </p>
-                    </div>
-                  </div>
+                   <div className="space-y-4">
+                     <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                         URL вашего сайта
+                       </label>
+                       <div className="flex items-center space-x-2">
+                         <input
+                           type="text"
+                           value={userSiteUrl}
+                           onChange={(e) => setUserSiteUrl(e.target.value)}
+                           placeholder="Ваш сайт (например: example.ru)"
+                           className="input-field flex-1"
+                         />
+                         <button
+                           onClick={async () => {
+                             const url = userSiteUrl.trim();
+                             if (url) {
+                               try {
+                                 const res = await api.post('/analysis/check-site', { url });
+                                 setUserSiteStatus(res.data.available ? '✅ Сайт доступен' : '❌ Сайт недоступен');
+                               } catch {
+                                 setUserSiteStatus('❌ Ошибка проверки');
+                               }
+                             } else {
+                               setUserSiteStatus('❌ Введите URL сайта');
+                             }
+                           }}
+                           className="btn-secondary whitespace-nowrap"
+                         >
+                           Проверить
+                         </button>
+                         {userSiteStatus && (
+                           <span className="text-sm font-medium whitespace-nowrap">{userSiteStatus}</span>
+                         )}
+                       </div>
+                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                         Укажите URL вашего сайта для сравнения цен
+                       </p>
+                     </div>
+                   </div>
                 )}
               </div>
             )}

@@ -360,21 +360,21 @@ function NewAnalysisModal({ onClose, onSuccess }) {
   const [foundCompetitors, setFoundCompetitors] = useState([])
   const [selectedCompetitors, setSelectedCompetitors] = useState([])
   const [analysisId, setAnalysisId] = useState(null)
-  
-  const checkSite = (site) => {
+  const [checkResults, setCheckResults] = useState({})
+  const [checkingSite, setCheckingSite] = useState(null)
+
+  const checkSite = async (site) => {
     if (!site) return
-    fetch('/api/analysis/check-site', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: site })
-    })
-    .then(res => res.json())
-    .then(data => {
-      window.alert(data.available ? `Сайт ${site} доступен` : `Сайт ${site} недоступен: ${data.message || 'нет ответа'}`)
-    })
-    .catch(err => {
-      window.alert(`Ошибка проверки ${site}: ${err.message}`)
-    })
+    setCheckingSite(site)
+    try {
+      const res = await api.post('/analysis/check-site', { url: site })
+      const data = res.data
+      setCheckResults(prev => ({ ...prev, [site]: data }))
+    } catch (err) {
+      setCheckResults(prev => ({ ...prev, [site]: { available: false, message: err.response?.data?.message || err.message } }))
+    } finally {
+      setCheckingSite(null)
+    }
   }
   
     const regions = [
@@ -568,11 +568,16 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                   <button
                     type="button"
                     onClick={() => checkSite(userSite)}
-                    disabled={!userSite}
+                    disabled={!userSite || checkingSite === userSite}
                     className="btn-secondary whitespace-nowrap"
                   >
-                    Проверить
+                    {checkingSite === userSite ? 'Проверка...' : 'Проверить'}
                   </button>
+                  {checkResults[userSite] && (
+                    <span className={`text-sm font-medium ${checkResults[userSite].available ? 'text-green-600' : 'text-red-600'}`}>
+                      {checkResults[userSite].available ? '✅ Доступен' : `❌ ${checkResults[userSite].message || 'Нет ответа'}`}
+                    </span>
+                  )}
                 </div>
               </div>
               <div>
@@ -627,11 +632,16 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                   <button
                     type="button"
                     onClick={() => checkSite(userSite)}
-                    disabled={!userSite}
+                    disabled={!userSite || checkingSite === userSite}
                     className="btn-secondary whitespace-nowrap"
                   >
-                    Проверить
+                    {checkingSite === userSite ? 'Проверка...' : 'Проверить'}
                   </button>
+                  {checkResults[userSite] && (
+                    <span className={`text-sm font-medium ${checkResults[userSite].available ? 'text-green-600' : 'text-red-600'}`}>
+                      {checkResults[userSite].available ? '✅ Доступен' : `❌ ${checkResults[userSite].message || 'Нет ответа'}`}
+                    </span>
+                  )}
                 </div>
               </div>
               <div>
@@ -639,14 +649,19 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                 {competitors.map((comp, index) => (
                   <div key={index} className="flex items-center space-x-2 mb-2">
                     <input type="text" value={comp} onChange={(e) => { const updated = [...competitors]; updated[index] = e.target.value; setCompetitors(updated); }} className="input-field flex-1" placeholder={`Конкурент ${index + 1}`} />
-                    <button
-                      type="button"
-                      onClick={() => checkSite(comp)}
-                      disabled={!comp}
-                      className="btn-secondary whitespace-nowrap"
-                    >
-                      Проверить
-                    </button>
+                  <button
+                    type="button"
+                    onClick={() => checkSite(comp)}
+                    disabled={!comp || checkingSite === comp}
+                    className="btn-secondary whitespace-nowrap"
+                  >
+                    {checkingSite === comp ? 'Проверка...' : 'Проверить'}
+                  </button>
+                  {checkResults[comp] && (
+                    <span className={`text-sm font-medium ${checkResults[comp].available ? 'text-green-600' : 'text-red-600'}`}>
+                      {checkResults[comp].available ? '✅ Доступен' : `❌ ${checkResults[comp].message || 'Нет ответа'}`}
+                    </span>
+                  )}
                     {competitors.length > 1 && <button type="button" onClick={() => setCompetitors(competitors.filter((_, i) => i !== index))} className="btn-secondary p-2">-</button>}
                   </div>
                 ))}
@@ -656,57 +671,91 @@ function NewAnalysisModal({ onClose, onSuccess }) {
           )}
 
           {showCompetitorSelection ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Выберите конкурентов (до 3)</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Отметьте до 3 конкурентов из найденных:</p>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {foundCompetitors.map((comp, index) => {
-                    // Adapt domain for city display
-                    const displayDomain = adaptDomainForCity(comp.domain, region);
-                    return (
-                      <label key={index} className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                        selectedCompetitors.includes(comp.domain) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}>
-                        <input
-                          type="checkbox"
-                          checked={selectedCompetitors.includes(comp.domain)}
-                          onChange={() => handleCompetitorSelect(comp.domain)}
-                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900 dark:text-white">{displayDomain}</p>
-                          {comp.title && <p className="text-sm text-gray-500 dark:text-gray-400">{comp.title}</p>}
-                        </div>
-                        <a
-                          href={`https://${comp.domain}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-600 hover:text-primary-500 text-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Открыть
-                        </a>
-                      </label>
-                    );
-                  })}
-                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Найдено {foundCompetitors.length} конкурентов</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Выберите конкурентов для анализа цен</p>
               </div>
-              <div className="flex justify-end space-x-4 pt-4 border-t">
-                <button type="button" onClick={onClose} className="btn-secondary">Отмена</button>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="pb-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 w-10"></th>
+                      <th className="pb-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Сайт</th>
+                      <th className="pb-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Позиция</th>
+                      <th className="pb-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Тип выдачи</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {foundCompetitors.map((comp, index) => {
+                      const displayDomain = adaptDomainForCity(comp.domain, region)
+                      const type = comp.types?.[0] || 'organic'
+                      const position = comp.positions ? Object.values(comp.positions)[0] : index + 1
+                      const isSelected = selectedCompetitors.includes(comp.domain)
+                      return (
+                        <tr
+                          key={index}
+                          onClick={() => handleCompetitorSelect(comp.domain)}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                          }`}
+                        >
+                          <td className="py-3 pr-2">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}}
+                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                          </td>
+                          <td className="py-3">
+                            <span className="font-medium text-gray-900 dark:text-white">{displayDomain}</span>
+                          </td>
+                          <td className="py-3 text-center">
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              {position}
+                            </span>
+                          </td>
+                          <td className="py-3 text-right">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              type === 'ad' || type === 'ads'
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                            }`}>
+                              {type === 'ad' || type === 'ads' ? 'Платная' : 'Органическая'}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Выберите до 3 конкурентов
+              </p>
+
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onClick={() => setShowCompetitorSelection(false)} className="btn-secondary">← Назад</button>
                 <button
                   type="button"
                   onClick={handleConfirmCompetitors}
                   disabled={selectedCompetitors.length === 0 || loading}
                   className="btn-primary flex items-center space-x-2"
                 >
-                  {loading ? <><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Сохранение...</span></> : <><span>Подтвердить ({selectedCompetitors.length}/3)</span></>}
+                  {loading ? (
+                    <><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Сохранение...</span></>
+                  ) : (
+                    <><span>Далее — сбор цен</span><ChevronRight className="h-4 w-4" /></>
+                  )}
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex justify-end space-x-4 pt-4 border-t">
-              <button type="button" onClick={onClose} className="btn-secondary">Отмена</button>
+              <button type="button" onClick={() => setShowNewAnalysisModal(false)} className="btn-secondary">Отмена</button>
               <button type="submit" disabled={loading} className="btn-primary flex items-center space-x-2">
                 {loading ? <><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Создание...</span></> : <><span>Создать</span><ChevronRight className="h-4 w-4" /></>}
               </button>

@@ -145,36 +145,154 @@ class ProductLinkService:
         return ProductLink.query.filter_by(analysis_id=analysis_id).all()
 
 
+REGION_CITIES = {
+    '213': 'Москва',
+    '2': 'Санкт-Петербург',
+    '54': 'Екатеринбург',
+    '47': 'Новосибирск',
+    '43': 'Краснодар',
+    '120': 'Казань',
+    '51': 'Самара',
+    '24': 'Воронеж',
+    '35': 'Нижний Новгород',
+    '39': 'Ростов-на-Дону',
+    '38': 'Волгоград',
+    '59': 'Пермь',
+    '28': 'Уфа',
+    '48': 'Омск',
+    '50': 'Челябинск',
+    '64': 'Саратов',
+    '189': 'Тюмень',
+    '30': 'Красноярск',
+    '66': 'Ижевск',
+    '75': 'Ставрополь',
+    '44': 'Сочи',
+    '58': 'Пенза',
+    '57': 'Оренбург',
+    '192': 'Кемерово',
+    '69': 'Томск',
+    '68': 'Ульяновск',
+    '22': 'Хабаровск',
+    '26': 'Владивосток',
+    '70': 'Тольятти',
+    '49': 'Барнаул',
+}
+
+REGION_ALIASES = {
+    '213': [],
+    '2': ['спб', 'питер', 'sankt-peterburg', 'spb', 'piter'],
+    '54': ['екб', 'ekb'],
+    '47': ['нск', 'nsk', 'новосиб'],
+    '43': ['крд', 'krd'],
+    '51': ['самара'],
+    '24': ['врн', 'vrn'],
+    '35': ['нн', 'нижний'],
+    '39': ['рнд', 'rnd'],
+    '38': ['вг', 'vg'],
+    '59': ['пмр', 'pmr'],
+    '28': ['уфа'],
+    '48': ['омск'],
+    '50': ['члб', 'chlb'],
+    '64': ['срт', 'srt'],
+    '189': ['тюм', 'tym'],
+    '30': ['крск', 'krsk'],
+    '66': ['иж', 'izh'],
+    '75': ['ств', 'stv'],
+    '44': ['сочи'],
+    '58': ['пнз', 'pnz'],
+    '57': ['орб', 'orb'],
+    '192': ['кмр', 'kmr'],
+    '69': ['томск'],
+    '68': ['ульск', 'ulsk'],
+    '22': ['хаб', 'khab'],
+    '26': ['вл', 'vl'],
+    '70': ['тт', 'tt'],
+    '49': ['брн', 'brn'],
+}
+
+
+def adapt_query_to_city(query, region):
+    region_str = str(region)
+    city = REGION_CITIES.get(region_str)
+    if not city:
+        return query
+
+    query_lower = query.lower()
+    # Check full city name
+    if city.lower() in query_lower:
+        return query
+    # Check alternative names
+    aliases = REGION_ALIASES.get(region_str, [])
+    for alias in aliases:
+        if alias in query_lower:
+            return query
+    # Check parts of compound city names
+    city_parts = city.lower().replace('-', ' ').split()
+    for part in city_parts:
+        if len(part) > 3 and part in query_lower:
+            return query
+
+    return f"{query} {city}"
+
+
 class SearchService:
     @staticmethod
     def perform_search(analysis_id, queries, positions, result_types, region):
-        # Default to organic if no result_types specified
         if result_types is None:
             result_types = ['organic']
-             
-        # Use YandexParser for real search (can be switched to DuckDuckGo or others)
-        parser = None
-        try:
-            from ..utils import YandexParser
-            parser = YandexParser(region=region)
-        except ImportError:
-            # Fallback to DuckDuckGo if Yandex not available
-            from ..utils import DuckDuckGoParser
-            parser = DuckDuckGoParser(region=region)
-         
-        competitors = parser.find_competitors(queries, positions, result_types)
+
+        # Adapt queries to include city name based on region
+        adapted_queries = [adapt_query_to_city(q, region) for q in queries]
+
+        competitors = []
         
-        # If real parser returns no results, fall back to mock parser
+        # 1. Try DuckDuckGo first (returns real search results, organic only)
+        try:
+            from ..utils import DuckDuckGoParser
+            ddg = DuckDuckGoParser(region=region)
+            competitors = ddg.find_competitors(adapted_queries, positions)
+        except ImportError:
+            pass
+        
+        # 2. If Yandex.XML is configured, query it for organic + ads
+        try:
+            from ..utils import YandexXMLParser
+            if YandexXMLParser.is_configured():
+                yxml = YandexXMLParser(region=region)
+                yxml_results = yxml.find_competitors(adapted_queries, positions)
+                # Merge Yandex results into competitors, prefer Yandex result types
+                if yxml_results:
+                    existing = {c['domain']: c for c in competitors}
+                    for yc in yxml_results:
+                        d = yc['domain']
+                        if d in existing:
+                            existing[d]['types'] = list(set(existing[d].get('types', []) + yc.get('types', [])))
+                            for q in yc.get('found_in_queries', []):
+                                if q not in existing[d].get('found_in_queries', []):
+                                    existing[d]['found_in_queries'].append(q)
+                                if q not in existing[d].get('positions', {}):
+                                    existing[d]['positions'][q] = yc['positions'].get(q)
+                        else:
+                            existing[d] = yc
+                    competitors = list(existing.values())
+        except ImportError:
+            pass
+        
+        # 3. Fallback to YandexParser with selenium (if available)
         if not competitors:
-            from ..utils import MockSearchParser
-            mock_parser = MockSearchParser(region=region)
-            competitors = mock_parser.find_competitors(queries, positions, result_types)
+            try:
+                from ..utils import YandexParser
+                yandex = YandexParser(region=region)
+                y_results = yandex.find_competitors(adapted_queries, positions, result_types)
+                if y_results:
+                    competitors = y_results
+            except ImportError:
+                pass
          
         # Save search results to database
         for comp in competitors:
             for query in comp.get('found_in_queries', []):
                 position = comp['positions'].get(query)
-                # Get the first result type for this query-domain pair
                 result_type = comp['types'][0] if comp['types'] else 'organic'
                  
                 search_result = SearchResult(

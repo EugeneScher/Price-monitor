@@ -1,13 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { User, Mail, Calendar, AlertCircle } from 'lucide-react'
+import { User, Mail, Calendar, AlertCircle, Search, ExternalLink, Check, X } from 'lucide-react'
 import { formatDate } from '../utils/export'
+import api from '../utils/api'
+import { useToast } from '../context/ToastContext'
 
 export default function Profile() {
   const { user, logout } = useAuth()
+  const { success, error: showError } = useToast()
   const navigate = useNavigate()
   const [showConfirm, setShowConfirm] = useState(false)
+  const [yandexKey, setYandexKey] = useState('')
+  const [yandexFolderId, setYandexFolderId] = useState('')
+  const [yandexEnabled, setYandexEnabled] = useState(false)
+  const [yandexConfigured, setYandexConfigured] = useState(false)
+  const [savingYandex, setSavingYandex] = useState(false)
+
+  useEffect(() => {
+    api.get('/analysis/yandex-xml-status').then(res => {
+      setYandexConfigured(res.data.configured)
+    }).catch(() => {})
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -46,6 +60,79 @@ export default function Profile() {
                 {user?.created_at ? formatDate(user.created_at) : 'N/A'}
               </p>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <Search className="h-5 w-5 inline mr-1" />
+            Яндекс Search API (рекламные результаты)
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Для отображения рекламных объявлений в результатах поиска.
+            <a href="https://yandex.cloud/en/docs/search-api/quickstart/" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline ml-1 inline-flex items-center">
+              Получить ключ <ExternalLink className="h-3 w-3 ml-0.5" />
+            </a>
+          </p>
+          <div className="space-y-3 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API key</label>
+              <input
+                type="text"
+                value={yandexKey}
+                onChange={(e) => setYandexKey(e.target.value)}
+                className="input-field font-mono text-sm"
+                placeholder="AQVN..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">folder ID (опционально)</label>
+              <input
+                type="text"
+                value={yandexFolderId}
+                onChange={(e) => setYandexFolderId(e.target.value)}
+                className="input-field font-mono text-sm"
+                placeholder="b1g..."
+              />
+            </div>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={yandexEnabled}
+                onChange={(e) => setYandexEnabled(e.target.checked)}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">Использовать Яндекс Search API для поиска</span>
+            </label>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={async () => {
+                setSavingYandex(true)
+                try {
+                  await api.put('/analysis/yandex-xml-config', {
+                    key: yandexKey,
+                    folder_id: yandexFolderId,
+                    enabled: yandexEnabled
+                  })
+                  setYandexConfigured(!!(yandexKey && yandexEnabled))
+                  success('Настройки Яндекс Search API сохранены')
+                } catch {
+                  showError('Ошибка при сохранении')
+                } finally {
+                  setSavingYandex(false)
+                }
+              }}
+              disabled={savingYandex}
+              className="btn-primary text-sm"
+            >
+              {savingYandex ? 'Сохранение...' : 'Сохранить'}
+            </button>
+            {yandexConfigured && (
+              <span className="flex items-center text-sm text-green-600 dark:text-green-400">
+                <Check className="h-4 w-4 mr-1" /> настроен
+              </span>
+            )}
           </div>
         </div>
 
