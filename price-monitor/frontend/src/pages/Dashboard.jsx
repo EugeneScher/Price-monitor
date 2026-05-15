@@ -127,10 +127,15 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {isDemo && (
-        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-start gap-3">
-          <div className="text-yellow-600 dark:text-yellow-400">
-            <p className="font-medium">Демо режим</p>
-            <p className="text-sm mt-1">Это демонстрационные данные. <Link to="/register" className="underline">Зарегистрируйтесь</Link> для создания реальных анализов.</p>
+        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 text-yellow-800 dark:text-yellow-200">
+              <p className="font-medium">Вы в деморежиме</p>
+              <p className="text-sm mt-1">Пожалуйста, <Link to="/register" className="underline font-medium">зарегистрируйтесь</Link> для создания реальных анализов и управления ценами.</p>
+            </div>
+            <Link to="/register" className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors whitespace-nowrap">
+              Регистрация
+            </Link>
           </div>
         </div>
       )}
@@ -140,13 +145,23 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Мои анализы</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Управление анализами цен конкурентов</p>
         </div>
-        <button
-          onClick={() => setShowNewAnalysisModal(true)}
-          className="btn-primary flex items-center space-x-2"
-        >
-          <Plus className="h-5 w-5" />
-          <span>Новый анализ</span>
-        </button>
+        {isDemo ? (
+          <button
+            onClick={() => showError('Вы в деморежиме. Пожалуйста, зарегистрируйтесь для создания анализов.')}
+            className="btn-primary flex items-center space-x-2 opacity-60 cursor-not-allowed"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Новый анализ</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowNewAnalysisModal(true)}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Новый анализ</span>
+          </button>
+        )}
       </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -285,13 +300,19 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Link to={`/analysis/${analysis.id}`} className="btn-secondary flex items-center space-x-1">
+                  <Link to={`/analysis/${analysis.id}`} state={{ demo: isDemo }} className="btn-secondary flex items-center space-x-1">
                     <Eye className="h-4 w-4" />
                     <span>Открыть</span>
                   </Link>
-                  <button onClick={() => deleteAnalysis(analysis.id)} className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                  {isDemo ? (
+                    <button onClick={() => showError('Вы в деморежиме. Удаление недоступно.')} className="p-2 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50">
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  ) : (
+                    <button onClick={() => deleteAnalysis(analysis.id)} className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))

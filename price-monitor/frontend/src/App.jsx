@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -14,6 +14,7 @@ import SelectorsSetup from './pages/SelectorsSetup'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
+  const location = useLocation()
 
   if (loading) {
     return (
@@ -23,7 +24,7 @@ function ProtectedRoute({ children }) {
     )
   }
 
-  if (!user) {
+  if (!user && location.state?.demo !== true) {
     return <Navigate to="/login" replace />
   }
 

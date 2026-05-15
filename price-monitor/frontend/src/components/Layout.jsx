@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { BarChart3, LogOut, User, Menu, X, Sun, Moon } from 'lucide-react'
@@ -8,7 +8,9 @@ export default function Layout({ children }) {
   const { user, logout } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isDemo = location.state?.demo === true
 
   const handleLogout = () => {
     logout()
@@ -23,6 +25,11 @@ export default function Layout({ children }) {
             <Link to="/" className="flex items-center space-x-2">
               <BarChart3 className="h-8 w-8 text-primary-600 dark:text-primary-400" />
               <span className="text-xl font-bold text-gray-900 dark:text-white">PriceMonitor</span>
+              {isDemo && (
+                <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
+                  Демо
+                </span>
+              )}
             </Link>
 
             <nav className="hidden md:flex items-center space-x-8">
@@ -105,14 +112,7 @@ export default function Layout({ children }) {
         {children}
       </main>
 
-      <footer className="bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-sm">© 2026 PriceMonitor. Все права защищены.</p>
-            <p className="text-xs mt-2 text-gray-500 dark:text-gray-500">Дипломный проект</p>
-          </div>
-        </div>
-      </footer>
+
     </div>
   )
 }

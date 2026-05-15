@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useLocation } from 'react-router-dom'
 import api from '../utils/api'
 import { ArrowLeft, Download, Table, Link as LinkIcon, X, Check, Settings } from 'lucide-react'
 import { getRegionName } from '../utils/regions'
@@ -7,8 +7,133 @@ import { exportToExcel, exportToCSV, formatPrice, formatDate } from '../utils/ex
 import { PriceComparisonChart, PriceDifferenceChart } from '../components/Charts'
 import { useToast } from '../context/ToastContext'
 
+const DEMO_DATA = {
+  1: {
+    id: 1, analysis_type: 'auto', region: '213',
+    queries: ['iPhone 15 Pro', 'Samsung Galaxy S24'],
+    user_site: 'example.ru',
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    competitors: [
+      {
+        id: 101, domain: 'mvideo.ru', is_user_site: false,
+        title_selector: '.product-title', price_selector: '.product-price',
+        products: [
+          { id: 201, name: 'iPhone 15 Pro 128GB', price: 89990, currency: 'RUB' },
+          { id: 202, name: 'iPhone 15 Pro 256GB', price: 99990, currency: 'RUB' },
+          { id: 203, name: 'Samsung Galaxy S24 256GB', price: 79990, currency: 'RUB' },
+        ]
+      },
+      {
+        id: 102, domain: 'citilink.ru', is_user_site: false,
+        title_selector: '.product_name', price_selector: '.current-price',
+        products: [
+          { id: 204, name: 'iPhone 15 Pro 128GB Natural Titanium', price: 87990, currency: 'RUB' },
+          { id: 205, name: 'Samsung Galaxy S24 Ultra 512GB', price: 109990, currency: 'RUB' },
+        ]
+      },
+      {
+        id: 103, domain: 'example.ru', is_user_site: true,
+        title_selector: null, price_selector: null,
+        products: [
+          { id: 206, name: 'iPhone 15 Pro 128GB', price: 94990, currency: 'RUB' },
+          { id: 207, name: 'iPhone 15 Pro 256GB', price: 104990, currency: 'RUB' },
+          { id: 208, name: 'Samsung Galaxy S24 256GB', price: 84990, currency: 'RUB' },
+          { id: 209, name: 'Samsung Galaxy S24 Ultra 512GB', price: 114990, currency: 'RUB' },
+        ]
+      },
+    ],
+    product_links: [
+      { user_product_id: 206, competitor_product_id: 201 },
+      { user_product_id: 207, competitor_product_id: 202 },
+      { user_product_id: 208, competitor_product_id: 203 },
+      { user_product_id: 209, competitor_product_id: 205 },
+    ]
+  },
+  2: {
+    id: 2, analysis_type: 'manual', region: '2',
+    queries: ['Ноутбук Dell XPS'],
+    user_site: 'myshop.ru',
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    competitors: [
+      {
+        id: 104, domain: 'dns-shop.ru', is_user_site: false,
+        title_selector: '.catalog-product__name', price_selector: '.product-price__current',
+        products: [
+          { id: 210, name: 'Ноутбук Dell XPS 13 9310', price: 119990, currency: 'RUB' },
+          { id: 211, name: 'Ноутбук Dell XPS 15 9520', price: 159990, currency: 'RUB' },
+          { id: 212, name: 'Ноутбук Dell XPS 17 9720', price: 189990, currency: 'RUB' },
+        ]
+      },
+      {
+        id: 105, domain: 'eldorado.ru', is_user_site: false,
+        title_selector: '.product__title', price_selector: '.product__price',
+        products: [
+          { id: 213, name: 'Dell XPS 13 Plus 9320', price: 134990, currency: 'RUB' },
+          { id: 214, name: 'Dell XPS 15 9530', price: 169990, currency: 'RUB' },
+        ]
+      },
+      {
+        id: 106, domain: 'myshop.ru', is_user_site: true,
+        title_selector: null, price_selector: null,
+        products: [
+          { id: 215, name: 'Ноутбук Dell XPS 13', price: 124990, currency: 'RUB' },
+          { id: 216, name: 'Ноутбук Dell XPS 15', price: 164990, currency: 'RUB' },
+          { id: 217, name: 'Ноутбук Dell XPS 17', price: 199990, currency: 'RUB' },
+        ]
+      },
+    ],
+    product_links: [
+      { user_product_id: 215, competitor_product_id: 210 },
+      { user_product_id: 216, competitor_product_id: 211 },
+      { user_product_id: 217, competitor_product_id: 212 },
+    ]
+  },
+  3: {
+    id: 3, analysis_type: 'auto', region: '213',
+    queries: ['Sony PlayStation 5'],
+    user_site: 'gamezone.ru',
+    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+    competitors: [
+      {
+        id: 107, domain: 'mvideo.ru', is_user_site: false,
+        title_selector: '.product-title', price_selector: '.product-price',
+        products: [
+          { id: 218, name: 'Sony PlayStation 5 Digital Edition', price: 45990, currency: 'RUB' },
+          { id: 219, name: 'Sony PlayStation 5 Slim', price: 52990, currency: 'RUB' },
+          { id: 220, name: 'DualSense Wireless Controller', price: 6990, currency: 'RUB' },
+        ]
+      },
+      {
+        id: 108, domain: 'gamepark.ru', is_user_site: false,
+        title_selector: '.card__title', price_selector: '.card__price',
+        products: [
+          { id: 221, name: 'PS5 Digital Edition + FIFA 24', price: 49990, currency: 'RUB' },
+          { id: 222, name: 'Sony PlayStation 5 Pro', price: 74990, currency: 'RUB' },
+        ]
+      },
+      {
+        id: 109, domain: 'gamezone.ru', is_user_site: true,
+        title_selector: null, price_selector: null,
+        products: [
+          { id: 223, name: 'Sony PlayStation 5 Digital', price: 47990, currency: 'RUB' },
+          { id: 224, name: 'Sony PlayStation 5 Slim', price: 54990, currency: 'RUB' },
+          { id: 225, name: 'PS5 DualSense Controller', price: 7490, currency: 'RUB' },
+          { id: 226, name: 'Sony PlayStation 5 Pro', price: 79990, currency: 'RUB' },
+        ]
+      },
+    ],
+    product_links: [
+      { user_product_id: 223, competitor_product_id: 218 },
+      { user_product_id: 224, competitor_product_id: 219 },
+      { user_product_id: 225, competitor_product_id: 220 },
+      { user_product_id: 226, competitor_product_id: 222 },
+    ]
+  }
+}
+
 export default function AnalysisDetail() {
   const { id } = useParams()
+  const location = useLocation()
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('report')
@@ -17,12 +142,18 @@ export default function AnalysisDetail() {
   const [userSiteUrl, setUserSiteUrl] = useState('')
   const [userSiteStatus, setUserSiteStatus] = useState(null)
   const { error: showError } = useToast()
+  const isDemo = location.state?.demo === true
 
   useEffect(() => {
     fetchAnalysis()
   }, [id])
 
   const fetchAnalysis = async () => {
+    if (isDemo && DEMO_DATA[id]) {
+      setAnalysis(DEMO_DATA[id])
+      setLoading(false)
+      return
+    }
     try {
       const response = await api.get(`/analysis/${id}`)
       setAnalysis(response.data.analysis)
