@@ -254,7 +254,7 @@ export default function AnalysisDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <Link to="/dashboard" className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
+        <Link to="/dashboard" state={{ demo: isDemo }} className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
           <ArrowLeft className="h-4 w-4 mr-1" />
           Назад к списку
         </Link>
@@ -447,12 +447,22 @@ export default function AnalysisDetail() {
          <div className="lg:grid-cols-2 gap-6 text-gray-900 dark:text-white">
            {userCompetitor && (
              <div className="card">
-               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                 Ваши товары
-                 <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
-                   ({userCompetitor.products?.length || 0})
-                 </span>
-               </h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                  Ваши товары
+                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                    ({userCompetitor.products?.length || 0})
+                  </span>
+                  {analysis.user_site && (
+                    <a
+                      href={`https://${analysis.user_site.replace(/^https?:\/\//, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-normal text-primary-600 dark:text-primary-400 ml-3 hover:underline"
+                    >
+                      {analysis.user_site}
+                    </a>
+                  )}
+                </h3>
                {userCompetitor.products?.length > 0 ? (
                  <div className="space-y-2 max-h-96 overflow-y-auto">
                    {userCompetitor.products.map(product => (
@@ -555,13 +565,7 @@ export default function AnalysisDetail() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
-                  <Link 
-                    to={`/analysis/${id}/competitor/${competitor.id}/selectors`}
-                    className="btn-primary text-sm"
-                  >
-                    Настроить селекторы
-                  </Link>
+                  <p className="text-gray-500 dark:text-gray-400">Нет товаров. Настройте селекторы на вкладке "Конкуренты"</p>
                 </div>
               )}
             </div>

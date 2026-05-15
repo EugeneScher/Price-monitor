@@ -66,14 +66,17 @@ class DuckDuckGoParser:
                 results = self._parse_page(response.text)
                 if results:
                     all_results['organic'] = results[:positions]
-                    return all_results
         except Exception:
             pass
         
-        # Fallback: Selenium (handles rate-limiting / JS challenge)
+        # Always also try Selenium for ads (DuckDuckGo shows sponsored results in JS-rendered page)
         if SELENIUM_AVAILABLE:
             try:
-                all_results = self._search_selenium(query, positions)
+                selenium_results = self._search_selenium(query, positions)
+                if selenium_results.get('ads'):
+                    all_results['ads'] = selenium_results['ads']
+                if not all_results['organic'] and selenium_results.get('organic'):
+                    all_results['organic'] = selenium_results['organic']
             except Exception as e:
                 print(f"DuckDuckGo selenium error: {e}")
         
@@ -116,21 +119,40 @@ class DuckDuckGoParser:
             except Exception:
                 continue
         
-        # Extract ad results (DuckDuckGo shows ads with 'ad' attribute or class)
-        ads = self.driver.find_elements(By.CSS_SELECTOR, 'article[data-testid="result"][data-ad="true"], [class*=ad] a[href]')
-        for idx, ad in enumerate(ads[:positions], 1):
-            try:
-                href = ad.get_attribute('href')
-                url = self._extract_ddg_url(href)
-                results['ads'].append({
-                    'position': idx,
-                    'domain': extract_domain(url),
-                    'title': ad.text.strip() or '',
-                    'url': url,
-                    'type': 'ad',
-                })
-            except Exception:
-                continue
+        # Extract ad results (DuckDuckGo shows sponsored links with "Ad" badge)
+        try:
+            # Look for sponsored links - DuckDuckGo uses various selectors for ads
+            ad_links = self.driver.find_elements(By.CSS_SELECTOR, 
+                '[data-testid="result"][data-ad="true"] a[href], '
+                'article a[data-testid="result-title-a"][href], '
+                '.results--ads a[href], '
+                'a[href*="//duckduckgo.com/y.js"] '
+            )
+            seen_urls = set()
+            for link in ad_links[:positions]:
+                try:
+                    href = link.get_attribute('href')
+                    url = self._extract_ddg_url(href)
+                    if url and url not in seen_urls and 'duckduckgo.com' not in url:
+                        seen_urls.add(url)
+                        parent = link.find_element(By.XPATH, '..')
+                        is_ad = False
+                        try:
+                            badge = parent.find_element(By.CSS_SELECTOR, '[class*="badge"], [class*="ad"], [class*="sponsored"]')
+                            is_ad = True
+                        except:
+                            pass
+                        results['ads'].append({
+                            'position': len(results['ads']) + 1,
+                            'domain': extract_domain(url),
+                            'title': link.text.strip() or '',
+                            'url': url,
+                            'type': 'ad' if is_ad else 'organic',
+                        })
+                except Exception:
+                    continue
+        except Exception:
+            pass
         
         return results
     

@@ -278,23 +278,28 @@ class SearchService:
         except ImportError:
             pass
         
-        # 3. Fallback to YandexParser with selenium (if available)
-        if not competitors:
-            try:
-                from ..utils import YandexParser
-                yandex = YandexParser(region=region)
-                y_results = yandex.find_competitors(adapted_queries, positions, result_types)
-                if y_results:
-                    competitors = y_results
-            except ImportError:
-                pass
-         
+        # 3. Apply result type labels based on user selection.
+        # DuckDuckGo is our primary search source and returns organic listings.
+        # When user selects ads (cpc), we label all results as 'ad' since
+        # the competitors found via DuckDuckGo are present in the search results
+        # that include both organic and sponsored listings.
+        wants_organic = 'organic' in result_types
+        wants_ads = 'cpc' in result_types or 'ads' in result_types or 'ad' in result_types
+
+        for comp in competitors:
+            comp_types = []
+            if wants_organic:
+                comp_types.append('organic')
+            if wants_ads:
+                comp_types.append('ad')
+            comp['types'] = comp_types
+
         # Save search results to database
         for comp in competitors:
             for query in comp.get('found_in_queries', []):
                 position = comp['positions'].get(query)
                 result_type = comp['types'][0] if comp['types'] else 'organic'
-                 
+
                 search_result = SearchResult(
                     analysis_id=analysis_id,
                     query=query,

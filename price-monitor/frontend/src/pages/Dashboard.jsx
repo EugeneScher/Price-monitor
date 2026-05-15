@@ -665,7 +665,7 @@ function NewAnalysisModal({ onClose, onSuccess }) {
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Найдено {foundCompetitors.length} конкурентов</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Выберите конкурентов для анализа цен</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Выберите конкурентов для анализа цен. Тип выдачи указан на основе выбранных вами параметров поиска.</p>
               </div>
 
               <div className="overflow-x-auto">
@@ -681,7 +681,9 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {foundCompetitors.map((comp, index) => {
                       const displayDomain = adaptDomainForCity(comp.domain, region)
-                      const type = comp.types?.[0] || 'organic'
+                      const types = comp.types || ['organic']
+                      const hasAd = types.includes('ad') || types.includes('ads')
+                      const hasOrganic = types.includes('organic')
                       const position = comp.positions ? Object.values(comp.positions)[0] : index + 1
                       const isSelected = selectedCompetitors.includes(comp.domain)
                       return (
@@ -717,13 +719,18 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                             </span>
                           </td>
                           <td className="py-3 text-right">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                              type === 'ad' || type === 'ads'
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200'
-                                : 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
-                            }`}>
-                              {type === 'ad' || type === 'ads' ? 'Платная' : 'Органическая'}
-                            </span>
+                            <div className="flex flex-wrap gap-1 justify-end">
+                              {hasAd && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
+                                  Платная
+                                </span>
+                              )}
+                              {hasOrganic && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                  Органическая
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       )

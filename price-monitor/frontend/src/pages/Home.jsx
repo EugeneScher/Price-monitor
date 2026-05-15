@@ -2,8 +2,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   BarChart3, Search, TrendingUp, Clock, Shield, Zap,
   Globe, MousePointerClick, Database, Download, Smartphone,
-  ChevronRight, Star, ArrowRight, CheckCircle2,
-  Building2, Store, ShoppingBag, Users
+  ChevronRight, ArrowRight, CheckCircle2,
+  Store, ShoppingBag, Users
 } from 'lucide-react'
 
 export default function Home() {
@@ -218,7 +218,7 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 icon: Store,
@@ -226,13 +226,6 @@ export default function Home() {
                 desc: 'Отслеживайте цены конкурентов в своей нише. Будьте в курсе, кто меняет цены и когда.',
                 color: 'text-blue-600 dark:text-blue-400',
                 bg: 'bg-blue-50 dark:bg-blue-900/20'
-              },
-              {
-                icon: Building2,
-                title: 'Маркетплейсы',
-                desc: 'Анализируйте цены продавцов на Ozon, Wildberries и других площадках через поисковую выдачу.',
-                color: 'text-emerald-600 dark:text-emerald-400',
-                bg: 'bg-emerald-50 dark:bg-emerald-900/20'
               },
               {
                 icon: ShoppingBag,
@@ -270,19 +263,13 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 icon: Clock,
                 title: 'Экономия времени',
                 desc: 'Автоматический сбор данных вместо часов ручного мониторинга',
                 stat: 'до 95%'
-              },
-              {
-                icon: Zap,
-                title: 'Скорость',
-                desc: 'Полный цикл анализа за несколько минут',
-                stat: '3-5 мин'
               },
               {
                 icon: Shield,
@@ -343,39 +330,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <h4 className="text-gray-900 dark:text-white font-semibold mb-3">PriceMonitor</h4>
-              <p className="text-sm leading-relaxed">
-                Автоматический анализ цен конкурентов. Мониторинг поисковой выдачи DuckDuckGo и Яндекс.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-gray-900 dark:text-white font-semibold mb-3">Продукт</h4>
-              <ul className="space-y-2 text-sm">
-                <li><button onClick={handleDemoClick} className="hover:text-gray-900 dark:hover:text-white transition-colors">Демо</button></li>
-                <li><Link to="/register" className="hover:text-gray-900 dark:hover:text-white transition-colors">Регистрация</Link></li>
-                <li><Link to="/login" className="hover:text-gray-900 dark:hover:text-white transition-colors">Вход</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-gray-900 dark:text-white font-semibold mb-3">Технологии</h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-primary-500 dark:text-primary-400" /> DuckDuckGo Search</li>
-                <li className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-primary-500 dark:text-primary-400" /> Яндекс.XML</li>
-                <li className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-primary-500 dark:text-primary-400" /> CSS-селекторы</li>
-                <li className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-primary-500 dark:text-primary-400" /> Selenium</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 text-sm text-center">
-            &copy; {new Date().getFullYear()} PriceMonitor. Все права защищены.
-          </div>
-        </div>
-      </footer>
+
     </div>
   )
 }

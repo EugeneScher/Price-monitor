@@ -34,10 +34,17 @@ class SiteParser:
     def _clean_price(self, price_str):
         if not price_str:
             return None
+        # Skip percentage values like "-15%", "скидка 20%"
+        if '%' in price_str or 'скидк' in price_str.lower():
+            return None
         price_str = re.sub(r'[^\d.,]', '', price_str)
         price_str = price_str.replace(',', '.')
+        # Skip values that are unrealistically small for prices (< 10)
         try:
-            return float(price_str)
+            val = float(price_str)
+            if val < 10:
+                return None
+            return val
         except:
             return None
 
@@ -82,14 +89,37 @@ class SiteParser:
             self.driver.get(url)
             time.sleep(random.uniform(3, 5))
 
-            # Try to click "show more" / "load more" buttons
+            # Close popups and overlays that may block content
+            popup_selectors = [
+                'button:contains("Закрыть")', 'button:contains("Close")',
+                'button:contains("Принять")', 'button:contains("Accept")',
+                'button:contains("Согласен")', 'button:contains("Продолжить")',
+                'button:contains("Нет, спасибо")', 'button:contains("Не сейчас")',
+                'button:contains("Отмена")', '[class*="close"]',
+                '[class*="popup"] button', '[class*="modal"] button',
+                '[class*="cookie"] button', '[aria-label*="close"]',
+                '[aria-label*="Close"]', '[class*="notification"] button',
+            ]
+            for _ in range(2):
+                for sel in popup_selectors:
+                    try:
+                        els = self.driver.find_elements(By.CSS_SELECTOR, sel)
+                        for el in els:
+                            if el.is_displayed():
+                                el.click()
+                                time.sleep(0.5)
+                    except Exception:
+                        pass
+
+            # Try to click "show more" / "load more" / "view all" buttons
             for _ in range(3):
                 try:
                     btn_selectors = [
-                        'button:contains("Показать ещё")', '[class*="show-more"]',
-                        '[class*="load-more"]', '[class*="pagination"] button',
-                        'button:contains("Загрузить ещё")', 'a:contains("Далее")',
-                        'a:contains("Вперед")', '[class*="next"]',
+                        'button:contains("Показать ещё")', 'button:contains("Смотреть все")',
+                        'button:contains("Смотреть всё")', 'button:contains("Показать все")',
+                        '[class*="show-more"]', '[class*="load-more"]',
+                        '[class*="pagination"] button', 'button:contains("Загрузить ещё")',
+                        'a:contains("Далее")', 'a:contains("Вперед")', '[class*="next"]',
                     ]
                     found = False
                     for sel in btn_selectors:
@@ -154,8 +184,11 @@ class SiteParser:
         price_elements = self._try_selectors(soup, [price_selector])
         sku_elements = self._try_selectors(soup, [sku_selector]) if sku_selector else []
         
+        def is_percentage(text):
+            return '%' in text or 'скидк' in text.lower()
+
         sample_names = [el.get_text(strip=True) for el in name_elements[:5] if el.get_text(strip=True)]
-        sample_prices = [el.get_text(strip=True) for el in price_elements[:5] if el.get_text(strip=True)]
+        sample_prices = [el.get_text(strip=True) for el in price_elements[:5] if el.get_text(strip=True) and not is_percentage(el.get_text(strip=True))]
         sample_skus = [el.get_text(strip=True) for el in sku_elements[:5] if el.get_text(strip=True)]
         
         valid = len(name_elements) > 0 and len(price_elements) > 0
