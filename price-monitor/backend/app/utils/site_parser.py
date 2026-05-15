@@ -56,11 +56,15 @@ class SiteParser:
         return []
 
     def get_page(self, url):
+        # Use Selenium first for JS-heavy e-commerce sites
+        if SELENIUM_AVAILABLE:
+            html = self._get_page_selenium(url)
+            if html and len(html) > 1000:
+                return html
+        # Fallback to requests for simple sites
         html = self._get_page_requests(url)
         if html:
             return html
-        if SELENIUM_AVAILABLE:
-            return self._get_page_selenium(url)
         return None
 
     def _get_page_requests(self, url):
@@ -82,12 +86,27 @@ class SiteParser:
                 options.add_argument('--disable-dev-shm-usage')
                 options.add_argument('--window-size=1280,1024')
                 options.add_argument(f'user-agent={REAL_UA}')
+                options.add_argument('--disable-blink-features=AutomationControlled')
+                options.add_experimental_option('excludeSwitches', ['enable-automation'])
+                options.add_experimental_option('useAutomationExtension', False)
                 self.driver = webdriver.Chrome(
                     service=ChromeService(ChromeDriverManager().install()),
                     options=options
                 )
+                self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+                    'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'
+                })
             self.driver.get(url)
-            time.sleep(random.uniform(3, 5))
+            time.sleep(random.uniform(4, 6))
+
+            # Scroll down to trigger lazy-loaded content
+            try:
+                self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight / 2)')
+                time.sleep(1)
+                self.driver.execute_script('window.scrollTo(0, 0)')
+                time.sleep(0.5)
+            except Exception:
+                pass
 
             # Close popups and overlays that may block content
             popup_selectors = [

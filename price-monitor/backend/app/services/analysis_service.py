@@ -1,5 +1,5 @@
 from ..models import db, User, Analysis, Competitor, Product, ProductLink, SearchResult
-from ..utils import YandexParser, DuckDuckGoParser, MockSearchParser, SiteParser, extract_domain
+from ..utils import YandexParser, DuckDuckGoParser, MockSearchParser, SiteParser, extract_domain, is_excluded_domain
 
 
 class AnalysisService:
@@ -293,6 +293,9 @@ class SearchService:
             if wants_ads:
                 comp_types.append('ad')
             comp['types'] = comp_types
+
+        # 4. Remove excluded domains (aggregators, marketplaces, search engines)
+        competitors = [c for c in competitors if not is_excluded_domain(c['domain'])]
 
         # Save search results to database
         for comp in competitors:

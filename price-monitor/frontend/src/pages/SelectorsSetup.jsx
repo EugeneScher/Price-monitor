@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../utils/api'
-import { ArrowLeft, Check, Loader2, AlertCircle, Eye, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Loader2, AlertCircle, Eye, ExternalLink } from 'lucide-react'
 
 export default function SelectorsSetup() {
   const { id, competitorId } = useParams()
@@ -58,28 +58,6 @@ export default function SelectorsSetup() {
       setVerificationResult(response.data)
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка проверки селекторов')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSave = async () => {
-    if (!verificationResult?.valid) {
-      setError('Сначала проверьте корректность селекторов')
-      return
-    }
-    
-    setLoading(true)
-    
-    try {
-      await api.put(`/analysis/competitor/${competitorId}`, {
-        title_selector: nameSelector,
-        price_selector: priceSelector
-      })
-      setSaved(true)
-      setTimeout(() => navigate(`/analysis/${id}`), 1500)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка сохранения')
     } finally {
       setLoading(false)
     }
@@ -316,17 +294,9 @@ export default function SelectorsSetup() {
           {verificationResult?.valid && (
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={handleSave}
-                disabled={loading}
-                className="btn-primary flex items-center justify-center space-x-2"
-              >
-                <Check className="h-5 w-5" />
-                <span>Сохранить селекторы</span>
-              </button>
-              <button
                 onClick={handleParse}
                 disabled={loading}
-                className="btn-secondary flex items-center justify-center space-x-2"
+                className="btn-primary flex items-center justify-center space-x-2"
               >
                 <ExternalLink className="h-5 w-5" />
                 <span>Сохранить и собрать товары</span>
