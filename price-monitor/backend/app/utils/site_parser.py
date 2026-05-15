@@ -81,6 +81,32 @@ class SiteParser:
                 )
             self.driver.get(url)
             time.sleep(random.uniform(3, 5))
+
+            # Try to click "show more" / "load more" buttons
+            for _ in range(3):
+                try:
+                    btn_selectors = [
+                        'button:contains("Показать ещё")', '[class*="show-more"]',
+                        '[class*="load-more"]', '[class*="pagination"] button',
+                        'button:contains("Загрузить ещё")', 'a:contains("Далее")',
+                        'a:contains("Вперед")', '[class*="next"]',
+                    ]
+                    found = False
+                    for sel in btn_selectors:
+                        buttons = self.driver.find_elements(By.CSS_SELECTOR, sel)
+                        for btn in buttons:
+                            if btn.is_displayed() and btn.is_enabled():
+                                btn.click()
+                                time.sleep(random.uniform(1, 2))
+                                found = True
+                                break
+                        if found:
+                            break
+                    if not found:
+                        break
+                except Exception:
+                    break
+
             return self.driver.page_source
         except Exception as e:
             print(f"Selenium fetch error for {url}: {e}")
@@ -100,15 +126,15 @@ class SiteParser:
         price_elements = self._try_selectors(soup, price_selectors)
         sku_elements = self._try_selectors(soup, [sku_selector]) if sku_selector else []
         
-        min_len = min(len(name_elements), len(price_elements))
+        max_len = max(len(name_elements), len(price_elements))
         
-        for i in range(min_len):
-            name = name_elements[i].get_text(strip=True)
-            price_text = price_elements[i].get_text(strip=True)
+        for i in range(max_len):
+            name = name_elements[i].get_text(strip=True) if i < len(name_elements) else ''
+            price_text = price_elements[i].get_text(strip=True) if i < len(price_elements) else ''
             price = self._clean_price(price_text)
             sku = sku_elements[i].get_text(strip=True) if i < len(sku_elements) else None
             
-            if name:
+            if name and price is not None:
                 products.append({
                     'name': name,
                     'price': price,
@@ -132,11 +158,16 @@ class SiteParser:
         sample_prices = [el.get_text(strip=True) for el in price_elements[:5] if el.get_text(strip=True)]
         sample_skus = [el.get_text(strip=True) for el in sku_elements[:5] if el.get_text(strip=True)]
         
+        valid = len(name_elements) > 0 and len(price_elements) > 0
+        mismatch = abs(len(name_elements) - len(price_elements)) > max(len(name_elements), len(price_elements)) * 0.3 if valid else False
+        
         return {
-            'valid': len(name_elements) > 0 and len(price_elements) > 0,
+            'valid': valid,
             'name_count': len(name_elements),
             'price_count': len(price_elements),
             'sku_count': len(sku_elements),
+            'mismatch_warning': mismatch,
+            'mismatch_message': f'Найдено названий: {len(name_elements)}, цен: {len(price_elements)}. Проверьте селекторы.' if mismatch else None,
             'sample_names': sample_names,
             'sample_prices': sample_prices,
             'sample_skus': sample_skus

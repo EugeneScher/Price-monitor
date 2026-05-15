@@ -38,14 +38,14 @@ export default function Home() {
                   onClick={handleDemoClick}
                   className="inline-flex items-center justify-center bg-primary-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-primary-700 transition-all shadow-lg shadow-primary-900/20 group"
                 >
-                  Начать бесплатно
+                  Демо-режим
                   <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <Link
                   to="/login"
                   className="inline-flex items-center justify-center border-2 border-primary-300 dark:border-white/30 text-primary-700 dark:text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-white/10 transition-colors"
                 >
-                  Войти в систему
+                  Войти
                 </Link>
               </div>
             </div>

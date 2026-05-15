@@ -69,14 +69,14 @@ export default function Profile() {
             Яндекс Search API (рекламные результаты)
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Для отображения рекламных объявлений в результатах поиска.
+            Для поиска конкурентов используется DuckDuckGo (без API-ключа). Яндекс Search API нужен только для получения рекламных объявлений.
             <a href="https://yandex.cloud/en/docs/search-api/quickstart/" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline ml-1 inline-flex items-center">
               Получить ключ <ExternalLink className="h-3 w-3 ml-0.5" />
             </a>
           </p>
           <div className="space-y-3 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API key</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API key (опционально)</label>
               <input
                 type="text"
                 value={yandexKey}
@@ -105,6 +105,9 @@ export default function Profile() {
               <span className="text-sm text-gray-700 dark:text-gray-300">Использовать Яндекс Search API для поиска</span>
             </label>
           </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+            Поиск конкурентов работает через DuckDuckGo без API-ключа. Яндекс Search API опционален и нужен только для рекламной выдачи.
+          </p>
           <div className="flex items-center space-x-3">
             <button
               onClick={async () => {

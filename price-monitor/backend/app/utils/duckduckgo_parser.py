@@ -19,12 +19,24 @@ except ImportError:
     SELENIUM_AVAILABLE = False
 
 
+DDG_REGION_MAP = {
+    '213': 'ru-ru', '2': 'ru-ru', '54': 'ru-ru', '47': 'ru-ru',
+    '43': 'ru-ru', '120': 'ru-ru', '51': 'ru-ru', '24': 'ru-ru',
+    '35': 'ru-ru', '39': 'ru-ru', '38': 'ru-ru', '59': 'ru-ru',
+    '28': 'ru-ru', '48': 'ru-ru', '50': 'ru-ru', '64': 'ru-ru',
+    '189': 'ru-ru', '30': 'ru-ru', '66': 'ru-ru', '75': 'ru-ru',
+    '44': 'ru-ru', '58': 'ru-ru', '57': 'ru-ru', '192': 'ru-ru',
+    '69': 'ru-ru', '68': 'ru-ru', '22': 'ru-ru', '26': 'ru-ru',
+    '70': 'ru-ru', '49': 'ru-ru',
+}
+
+
 class DuckDuckGoParser:
     BASE_URL = 'https://html.duckduckgo.com/html/'
     JS_URL = 'https://duckduckgo.com/'
     
-    def __init__(self, region='wt-wt', delay=2):
-        self.region = region
+    def __init__(self, region='213', delay=2):
+        self.region = DDG_REGION_MAP.get(str(region), 'ru-ru')
         self.delay = delay
         self.session = requests.Session()
         self.session.headers.update({

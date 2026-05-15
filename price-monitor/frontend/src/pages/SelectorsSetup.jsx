@@ -10,7 +10,7 @@ export default function SelectorsSetup() {
   const [url, setUrl] = useState('')
   const [nameSelector, setNameSelector] = useState('')
   const [priceSelector, setPriceSelector] = useState('')
-  const [skuSelector, setSkuSelector] = useState('')
+  const [, setSkuSelector] = useState('')
   const [loading, setLoading] = useState(false)
   const [verificationResult, setVerificationResult] = useState(null)
   const [error, setError] = useState('')
@@ -23,7 +23,10 @@ export default function SelectorsSetup() {
       try {
         setCompetitorLoading(true)
         const response = await api.get(`/analysis/competitor/${competitorId}`)
-        setCompetitor(response.data.competitor)
+        const comp = response.data.competitor
+        setCompetitor(comp)
+        if (comp.title_selector) setNameSelector(comp.title_selector)
+        if (comp.price_selector) setPriceSelector(comp.price_selector)
       } catch (err) {
         setError(err.response?.data?.error || 'Ошибка загрузки данных конкурента')
       } finally {
@@ -154,7 +157,7 @@ export default function SelectorsSetup() {
         <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                URL сайта конкурента
+                URL страницы с товарами
               </label>
             <div className="flex items-center space-x-2">
               <input
@@ -263,6 +266,13 @@ export default function SelectorsSetup() {
                   {verificationResult.valid ? 'Селекторы найдены!' : 'Селекторы не найдены'}
                 </h3>
               </div>
+
+              {verificationResult.mismatch_warning && (
+                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-start space-x-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">{verificationResult.mismatch_message}</p>
+                </div>
+              )}
 
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div>

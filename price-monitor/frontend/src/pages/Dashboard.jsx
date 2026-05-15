@@ -238,14 +238,14 @@ export default function Dashboard() {
             </h2>
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Поиск..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input-field pl-8 py-1.5 text-sm w-48"
-                />
-                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Поиск по запросам и регионам..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="input-field pl-8 py-1.5 text-sm w-56"
+                  />
+                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
               <select
                 value={filterType}
@@ -754,7 +754,7 @@ function NewAnalysisModal({ onClose, onSuccess }) {
             </div>
           ) : (
             <div className="flex justify-end space-x-4 pt-4 border-t">
-              <button type="button" onClick={() => setShowNewAnalysisModal(false)} className="btn-secondary">Отмена</button>
+              <button type="button" onClick={onClose} className="btn-secondary">Отмена</button>
               <button type="submit" disabled={loading} className="btn-primary flex items-center space-x-2">
                 {loading ? <><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Создание...</span></> : <><span>Создать</span><ChevronRight className="h-4 w-4" /></>}
               </button>

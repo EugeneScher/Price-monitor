@@ -262,7 +262,7 @@ export default function AnalysisDetail() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Анализ #{analysis.id}</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              {formatDate(analysis.created_at)} • Регион: {getRegionName(analysis.region)}
+              {formatDate(analysis.created_at)} (UTC) • Регион: {getRegionName(analysis.region)}
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -342,7 +342,7 @@ export default function AnalysisDetail() {
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет данных для отображения</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500">
-                  Для формирования отчёта необходимо связать товары на вкладке "Связывание"
+                  Сначала добавьте товары своего сайта через <button onClick={() => setActiveTab('products')} className="text-primary-600 dark:text-primary-400 hover:underline font-medium">вкладку "Товары"</button> (настройте селекторы и соберите товары), затем свяжите их с товарами конкурентов на вкладке "Связывание"
                 </p>
               </div>
             ) : (
@@ -467,48 +467,57 @@ export default function AnalysisDetail() {
                      </div>
                    ))}
                  </div>
-                ) : (
-                   <div className="space-y-4">
-                     <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                         URL вашего сайта
-                       </label>
-                       <div className="flex items-center space-x-2">
-                         <input
-                           type="text"
-                           value={userSiteUrl}
-                           onChange={(e) => setUserSiteUrl(e.target.value)}
-                           placeholder="Ваш сайт (например: example.ru)"
-                           className="input-field flex-1"
-                         />
-                         <button
-                           onClick={async () => {
-                             const url = userSiteUrl.trim();
-                             if (url) {
-                               try {
-                                 const res = await api.post('/analysis/check-site', { url });
-                                 setUserSiteStatus(res.data.available ? '✅ Сайт доступен' : '❌ Сайт недоступен');
-                               } catch {
-                                 setUserSiteStatus('❌ Ошибка проверки');
-                               }
-                             } else {
-                               setUserSiteStatus('❌ Введите URL сайта');
-                             }
-                           }}
-                           className="btn-secondary whitespace-nowrap"
-                         >
-                           Проверить
-                         </button>
-                         {userSiteStatus && (
-                           <span className="text-sm font-medium whitespace-nowrap">{userSiteStatus}</span>
-                         )}
-                       </div>
-                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                         Укажите URL вашего сайта для сравнения цен
-                       </p>
-                     </div>
-                   </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-gray-500 dark:text-gray-400 mb-4">Нет товаров</p>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          URL вашего сайта
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={userSiteUrl}
+                            onChange={(e) => setUserSiteUrl(e.target.value)}
+                            placeholder="Ваш сайт (например: example.ru)"
+                            className="input-field flex-1"
+                          />
+                          <button
+                            onClick={async () => {
+                              const url = userSiteUrl.trim();
+                              if (url) {
+                                try {
+                                  const res = await api.post('/analysis/check-site', { url });
+                                  setUserSiteStatus(res.data.available ? '✅ Сайт доступен' : '❌ Сайт недоступен');
+                                } catch {
+                                  setUserSiteStatus('❌ Ошибка проверки');
+                                }
+                              } else {
+                                setUserSiteStatus('❌ Введите URL сайта');
+                              }
+                            }}
+                            className="btn-secondary whitespace-nowrap"
+                          >
+                            Проверить
+                          </button>
+                          {userSiteStatus && (
+                            <span className="text-sm font-medium whitespace-nowrap">{userSiteStatus}</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Укажите URL вашего сайта, затем настройте селекторы и соберите товары
+                        </p>
+                        {userCompetitor && (
+                          <Link
+                            to={`/analysis/${id}/competitor/${userCompetitor.id}/selectors`}
+                            className="btn-primary text-sm inline-flex items-center space-x-1 mt-3"
+                          >
+                            <Settings className="h-4 w-4" />
+                            <span>Настроить селекторы и собрать товары</span>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
                 )}
               </div>
             )}
