@@ -1,36 +1,33 @@
-# PriceMonitor - Сервис анализа цен конкурентов
+# PriceMonitor — Сервис анализа цен конкурентов
 
-Веб-сервис для мониторинга цен конкурентов в поисковой выдаче Яндекс с автоматическим сбором и сравнением ценовых данных.
+Веб-сервис для мониторинга цен конкурентов в поисковой выдаче с автоматическим сбором и сравнением ценовых данных.
 
 ## Возможности
 
-- **Автоматический поиск конкурентов** - ввод поисковых запросов и получение списка конкурентов из выдачи Яндекс
-- **Ручной ввод конкурентов** - указание конкретных сайтов для анализа
-- **Парсинг цен** - сбор цен с сайтов конкурентов по CSS-селекторам с проверкой
-- **Сравнительный отчёт** - анализ разницы цен с вашими товарами
-- **Визуализация** - графики Chart.js для наглядного анализа
-- **Экспорт данных** - выгрузка в Excel и CSV форматы
-- **История анализов** - сохранение и просмотр всех проведённых анализов
-- **Dark Mode** - тёмная тема интерфейса
+- **Автоматический поиск конкурентов** — поиск по DuckDuckGo (органическая + рекламная выдача) с учётом региона
+- **Ручной ввод конкурентов** — указание конкретных сайтов для анализа
+- **Парсинг цен** — сбор цен с сайтов конкурентов по CSS-селекторам через Selenium (с обходом попапов и lazy-контентом)
+- **Сравнительный отчёт** — анализ разницы цен с вашими товарами
+- **Визуализация** — графики Chart.js
+- **Экспорт данных** — выгрузка в Excel и CSV
+- **История анализов** — сохранение и просмотр всех анализов
+- **Демо-режим** — ознакомление без регистрации
+- **Адаптация под город** — регионы РФ (30 городов), подстановка города в поисковый запрос
+- **Dark Mode** — тёмная тема
 
 ## Технологии
 
 ### Backend
 - Python 3.11+
-- Flask
+- Flask, Flask-JWT-Extended, Flask-CORS
 - SQLAlchemy (SQLite)
-- Flask-JWT-Extended
-- BeautifulSoup4
-- Requests
+- Selenium + ChromeDriver
+- BeautifulSoup4, Requests, duckduckgo_search
 
 ### Frontend
-- React 18
-- Vite
-- Tailwind CSS
-- React Router
-- Axios
-- Chart.js
-- Lucide Icons
+- React 18, Vite, Tailwind CSS
+- React Router, Axios
+- Chart.js, Lucide Icons
 
 ## Установка и запуск
 
@@ -39,12 +36,12 @@
 ```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip3 install -r requirements.txt
-python3 main.py
+python3 main.py 5001
 ```
 
-Сервер запустится на http://localhost:5000
+Сервер запустится на http://localhost:5001
 
 ### Frontend
 
@@ -54,7 +51,9 @@ npm install
 npm run dev
 ```
 
-Приложение будет доступно на http://localhost:3000
+Приложение будет доступно на http://localhost:5173
+
+Демо-доступ: `demo@demo.com` / `demo`
 
 ## Структура проекта
 
@@ -62,75 +61,57 @@ npm run dev
 price-monitor/
 ├── backend/
 │   ├── app/
-│   │   ├── models/      # Модели базы данных
-│   │   ├── routes/      # API маршруты
-│   │   ├── services/   # Бизнес-логика
-│   │   └── utils/      # Парсеры (Yandex, Site)
-│   ├── config/         # Конфигурация
-│   ├── main.py         # Точка входа
+│   │   ├── models/       # Модели БД (User, Analysis, Competitor, Product, ...)
+│   │   ├── routes/       # API маршруты (auth, analysis)
+│   │   ├── services/     # Бизнес-логика
+│   │   └── utils/        # Парсеры (DuckDuckGo, Яндекс XML, SiteParser)
+│   ├── config/           # Конфигурация, excluded_domains
+│   ├── main.py           # Точка входа
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── components/  # React компоненты
-│   │   ├── pages/       # Страницы приложения
-│   │   ├── context/     # React Context
-│   │   ├── utils/       # Утилиты
-│   │   └── styles/      # CSS стили
+│   │   ├── components/   # Layout, Charts
+│   │   ├── pages/        # Home, Dashboard, AnalysisDetail, SelectorsSetup, ...
+│   │   ├── context/      # AuthContext, ThemeContext, ToastContext
+│   │   ├── utils/        # api, regions, export
+│   │   └── styles/       # Tailwind + кастомные стили
 │   └── package.json
-├── docker-compose.yml
 └── README.md
 ```
 
 ## API Endpoints
 
 ### Авторизация
-- `POST /api/auth/register` - Регистрация
-- `POST /api/auth/login` - Вход
-- `POST /api/auth/refresh` - Обновление токена
-- `GET /api/auth/me` - Текущий пользователь
-- `POST /api/auth/forgot-password` - Восстановление пароля
+- `POST /api/auth/register` — регистрация
+- `POST /api/auth/login` — вход
+- `POST /api/auth/refresh` — обновление токена
+- `GET /api/auth/me` — текущий пользователь
+- `POST /api/auth/forgot-password` — восстановление пароля (JWT-токен)
+- `POST /api/auth/reset-password` — смена пароля по токену
 
 ### Анализы
-- `GET /api/analysis` - Список анализов
-- `POST /api/analysis` - Создание анализа
-- `GET /api/analysis/{id}` - Детали анализа
-- `DELETE /api/analysis/{id}` - Удаление анализа
-- `POST /api/analysis/link` - Связывание товаров
-- `POST /api/analysis/competitor/{id}/verify-selectors` - Проверка селекторов
-- `POST /api/analysis/competitor/{id}/parse` - Парсинг товаров
+- `GET /api/analysis` — список анализов
+- `POST /api/analysis` — создание анализа (auto/manual)
+- `GET /api/analysis/{id}` — детали анализа с товарами и связями
+- `DELETE /api/analysis/{id}` — удаление анализа
+- `POST /api/analysis/{id}/select-competitors` — выбор конкурентов из найденных
+- `POST /api/analysis/{id}/competitor` — добавление конкурента
+- `GET /api/analysis/competitor/{id}` — данные конкурента
+- `PUT /api/analysis/competitor/{id}` — обновление селекторов
+- `DELETE /api/analysis/competitor/{id}` — удаление конкурента
+- `POST /api/analysis/competitor/{id}/verify-selectors` — проверка селекторов
+- `POST /api/analysis/competitor/{id}/parse` — парсинг товаров
+- `POST /api/analysis/link` — связывание товаров
+- `DELETE /api/analysis/link/{id}` — удаление связи
+- `GET /api/analysis/{id}/report` — отчёт
+- `POST /api/analysis/check-site` — проверка доступности сайта
 
-## Конфигурация
+## Поиск конкурентов
 
-Переменные окружения для backend (.env):
+1. **DuckDuckGo (HTML)** — основной источник, органическая выдача
+2. **Яндекс.XML** — опционально, рекламная выдача (требуется API-ключ)
+3. **DuckDuckGo (Selenium)** — дополнительно, для рекламных результатов
 
-```
-FLASK_ENV=development
-SECRET_KEY=your-secret-key
-JWT_SECRET_KEY=your-jwt-secret
-DATABASE_URL=sqlite:///pricemonitor.db
-```
-
-## Функционал
-
-### Режим 1: Автоматический поиск конкурентов
-- Ввод до 10 поисковых запросов
-- Выбор региона из списка
-- Настройка количества позиций (1-10)
-- Фильтрация по типу выдачи (органическая/реклама)
-
-### Режим 2: Ручной ввод конкурентов
-- Указание своего сайта
-- Ввод до 3 конкурентов
-- Настройка CSS-селекторов для парсинга
-- Проверка селекторов перед парсингом
-
-### Сопоставление товаров
-- Ручное связывание товаров пользователя с товарами конкурентов
-- Расчёт разницы цен
-
-### Отчёты
-- Таблица сравнения цен
-- Графики Chart.js
-- Экспорт в Excel и CSV
+Регионы автоматически адаптируются под DuckDuckGo (`ru-ru`).
 
 ## Дипломный проект 2026

@@ -121,11 +121,8 @@ class DuckDuckGoParser:
         
         # Extract ad results (DuckDuckGo shows sponsored links with "Ad" badge)
         try:
-            # Look for sponsored links - DuckDuckGo uses various selectors for ads
             ad_links = self.driver.find_elements(By.CSS_SELECTOR, 
-                '[data-testid="result"][data-ad="true"] a[href], '
-                'article a[data-testid="result-title-a"][href], '
-                '.results--ads a[href], '
+                'article[data-testid="result"][data-ad="true"] a[href], '
                 'a[href*="//duckduckgo.com/y.js"] '
             )
             seen_urls = set()
@@ -135,19 +132,12 @@ class DuckDuckGoParser:
                     url = self._extract_ddg_url(href)
                     if url and url not in seen_urls and 'duckduckgo.com' not in url:
                         seen_urls.add(url)
-                        parent = link.find_element(By.XPATH, '..')
-                        is_ad = False
-                        try:
-                            badge = parent.find_element(By.CSS_SELECTOR, '[class*="badge"], [class*="ad"], [class*="sponsored"]')
-                            is_ad = True
-                        except:
-                            pass
                         results['ads'].append({
                             'position': len(results['ads']) + 1,
                             'domain': extract_domain(url),
                             'title': link.text.strip() or '',
                             'url': url,
-                            'type': 'ad' if is_ad else 'organic',
+                            'type': 'ad',
                         })
                 except Exception:
                     continue

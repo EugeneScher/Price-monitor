@@ -251,6 +251,12 @@ export default function SelectorsSetup() {
                   <p className="text-sm text-yellow-700 dark:text-yellow-300">{verificationResult.mismatch_message}</p>
                 </div>
               )}
+              {verificationResult.error && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg flex items-start space-x-2">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+                  <p className="text-sm text-red-700 dark:text-red-300">{verificationResult.error}</p>
+                </div>
+              )}
 
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div>

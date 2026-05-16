@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   BarChart3, Search, TrendingUp, Clock, Shield, Zap,
   Globe, MousePointerClick, Database, Download, Smartphone,
-  ChevronRight, ArrowRight, CheckCircle2,
+  ChevronRight, ArrowRight,
   Store, ShoppingBag, Users
 } from 'lucide-react'
 
@@ -305,7 +305,7 @@ export default function Home() {
             Готовы попробовать?
           </h2>
           <p className="text-white/80 dark:text-primary-100 mb-10 text-lg max-w-2xl mx-auto">
-            Создайте первый анализ бесплатно. Никакой привязки карты — просто начните мониторинг цен конкурентов.
+            Попробуйте демо-режим без регистрации или создайте аккаунт для полноценной работы.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button
@@ -321,11 +321,6 @@ export default function Home() {
             >
               Создать аккаунт
             </Link>
-          </div>
-          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-white/70 dark:text-primary-200">
-            <span className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Без карты</span>
-            <span className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Без ограничений</span>
-            <span className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> 1 клик</span>
           </div>
         </div>
       </section>

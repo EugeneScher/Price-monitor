@@ -606,18 +606,18 @@ export default function AnalysisDetail() {
               <p className="text-sm text-primary-700 dark:text-primary-300 mb-2">Выберите ваш товар:</p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {userCompetitor?.products?.map(product => (
-                  <button
-                    key={product.id}
-                    onClick={() => setSelectedProduct(product)}
-                    className={`p-3 text-left rounded-lg border-2 transition-all ${
-                      selectedProduct?.id === product.id
-                        ? 'border-primary-500 bg-white dark:bg-gray-800'
-                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600'
-                    }`}
-                  >
-                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">{product.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{formatPrice(product.price)}</p>
-                  </button>
+                    <button
+                      key={product.id}
+                      onClick={() => { setSelectedProduct(product); setLinkingMode('competitor'); }}
+                      className={`p-3 text-left rounded-lg border-2 transition-all ${
+                        selectedProduct?.id === product.id
+                          ? 'border-primary-500 bg-white dark:bg-gray-800'
+                          : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">{product.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatPrice(product.price)}</p>
+                    </button>
                 ))}
               </div>
             </div>

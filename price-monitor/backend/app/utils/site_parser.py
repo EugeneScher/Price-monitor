@@ -175,11 +175,11 @@ class SiteParser:
         price_elements = self._try_selectors(soup, price_selectors)
         sku_elements = self._try_selectors(soup, [sku_selector]) if sku_selector else []
         
-        max_len = max(len(name_elements), len(price_elements))
+        count = min(len(name_elements), len(price_elements))
         
-        for i in range(max_len):
-            name = name_elements[i].get_text(strip=True) if i < len(name_elements) else ''
-            price_text = price_elements[i].get_text(strip=True) if i < len(price_elements) else ''
+        for i in range(count):
+            name = name_elements[i].get_text(strip=True)
+            price_text = price_elements[i].get_text(strip=True)
             price = self._clean_price(price_text)
             sku = sku_elements[i].get_text(strip=True) if i < len(sku_elements) else None
             

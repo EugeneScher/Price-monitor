@@ -5,8 +5,9 @@ EXCLUDED_DOMAINS = [
     'market.yandex.ru', 'avito.ru', 'cian.ru', '2gis.ru', 
     'drom.ru', 'auto.ru', 'irr.ru', 'ozon.ru', 'wildberries.ru',
     'dns-shop.ru', 'citilink.ru', 'eldorado.ru', 'technopark.ru',
-    'sbermegamarket.ru', 'mvideo.ru', 'leroymerlin.ru', 'vk.com',
-    'youtube.com', 'google.com', 'yandex.ru', 'mail.ru', 'rambler.ru'
+    'sbermegamarket.ru', 'mvideo.ru', 'leroymerlin.ru', 'lemana.pro',
+    'lemana.ru', 'vk.com', 'youtube.com', 'google.com', 'yandex.ru',
+    'mail.ru', 'rambler.ru'
 ]
 
 

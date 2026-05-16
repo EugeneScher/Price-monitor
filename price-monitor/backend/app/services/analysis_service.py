@@ -278,21 +278,26 @@ class SearchService:
         except ImportError:
             pass
         
-        # 3. Apply result type labels based on user selection.
-        # DuckDuckGo is our primary search source and returns organic listings.
-        # When user selects ads (cpc), we label all results as 'ad' since
-        # the competitors found via DuckDuckGo are present in the search results
-        # that include both organic and sponsored listings.
-        wants_organic = 'organic' in result_types
+        # 3. If user wants ads but no ad results found, try DuckDuckGo Selenium + YandexParser
         wants_ads = 'cpc' in result_types or 'ads' in result_types or 'ad' in result_types
-
-        for comp in competitors:
-            comp_types = []
-            if wants_organic:
-                comp_types.append('organic')
-            if wants_ads:
-                comp_types.append('ad')
-            comp['types'] = comp_types
+        has_ads = any('ad' in c.get('types', []) or 'ads' in c.get('types', []) for c in competitors)
+        if wants_ads and not has_ads:
+            try:
+                from ..utils import YandexParser
+                yandex = YandexParser(region=region)
+                yandex_types = ['ads' if t == 'cpc' else t for t in result_types]
+                y_results = yandex.find_competitors(adapted_queries, positions, yandex_types)
+                if y_results:
+                    existing = {c['domain']: c for c in competitors}
+                    for yc in y_results:
+                        d = yc['domain']
+                        if d in existing:
+                            existing[d]['types'] = list(set(existing[d].get('types', []) + yc.get('types', [])))
+                        else:
+                            existing[d] = yc
+                    competitors = list(existing.values())
+            except ImportError:
+                pass
 
         # 4. Remove excluded domains (aggregators, marketplaces, search engines)
         competitors = [c for c in competitors if not is_excluded_domain(c['domain'])]
@@ -366,9 +371,15 @@ class SiteParsingService:
         html = parser.get_page(url)
         
         if not html:
-            return {'valid': False, 'name_count': 0, 'price_count': 0}
+            return {'valid': False, 'name_count': 0, 'price_count': 0,
+                    'error': 'Не удалось загрузить страницу. Возможно, сайт блокирует парсинг.'}
         
-        return parser.verify_selectors(html, title_selector, price_selector, sku_selector)
+        result = parser.verify_selectors(html, title_selector, price_selector, sku_selector)
+        
+        if not result.get('valid') and len(html) < 2000:
+            result['error'] = 'Страница загружена, но не содержит достаточно данных. Возможно, контент загружается через JavaScript.'
+        
+        return result
 
     @staticmethod
     def test_selector(competitor_id, url, selector, selector_type):

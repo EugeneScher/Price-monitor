@@ -682,8 +682,7 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                     {foundCompetitors.map((comp, index) => {
                       const displayDomain = adaptDomainForCity(comp.domain, region)
                       const types = comp.types || ['organic']
-                      const hasAd = types.includes('ad') || types.includes('ads')
-                      const hasOrganic = types.includes('organic')
+                      const type = types.includes('ad') || types.includes('ads') ? 'ad' : 'organic'
                       const position = comp.positions ? Object.values(comp.positions)[0] : index + 1
                       const isSelected = selectedCompetitors.includes(comp.domain)
                       return (
@@ -719,18 +718,13 @@ function NewAnalysisModal({ onClose, onSuccess }) {
                             </span>
                           </td>
                           <td className="py-3 text-right">
-                            <div className="flex flex-wrap gap-1 justify-end">
-                              {hasAd && (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
-                                  Платная
-                                </span>
-                              )}
-                              {hasOrganic && (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
-                                  Органическая
-                                </span>
-                              )}
-                            </div>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              type === 'ad'
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                            }`}>
+                              {type === 'ad' ? 'Платная' : 'Органическая'}
+                            </span>
                           </td>
                         </tr>
                       )
