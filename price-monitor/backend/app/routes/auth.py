@@ -1,7 +1,11 @@
+import os
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, decode_token
 from ..models import db, User
 import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import timedelta
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -107,6 +111,49 @@ def get_current_user():
     return jsonify({'user': user.to_dict()}), 200
 
 
+def _send_reset_email(recipient, reset_url):
+    smtp_host = current_app.config.get('MAIL_SERVER', '')
+    smtp_port = current_app.config.get('MAIL_PORT', 587)
+    smtp_user = current_app.config.get('MAIL_USERNAME', '')
+    smtp_pass = current_app.config.get('MAIL_PASSWORD', '')
+    use_tls = current_app.config.get('MAIL_USE_TLS', True)
+
+    if not smtp_host or not smtp_user or 'your-' in smtp_user:
+        print(f'[PriceMonitor] SMTP не настроен. Ссылка для сброса пароля ({recipient}): {reset_url}')
+        return False
+
+    msg = MIMEMultipart()
+    msg['From'] = smtp_user
+    msg['To'] = recipient
+    msg['Subject'] = 'Восстановление пароля — PriceMonitor'
+
+    body = f'''
+<html>
+<body style="font-family: Arial, sans-serif; padding: 20px;">
+    <h2>Восстановление пароля</h2>
+    <p>Вы получили это письмо, потому что запросили восстановление пароля в PriceMonitor.</p>
+    <p>Для сброса пароля перейдите по ссылке:</p>
+    <p><a href="{reset_url}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px;">Сбросить пароль</a></p>
+    <p>Ссылка действительна в течение 1 часа.</p>
+    <p>Если вы не запрашивали восстановление пароля, проигнорируйте это письмо.</p>
+</body>
+</html>
+'''
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            if use_tls:
+                server.starttls()
+            if smtp_user:
+                server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, recipient, msg.as_string())
+        return True
+    except Exception as e:
+        print(f'Email send error: {e}')
+        return False
+
+
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
@@ -123,18 +170,23 @@ def forgot_password():
     
     if not user:
         return jsonify({'message': 'Если email существует в системе, инструкции будут отправлены'}), 200
-    
+
     reset_token = create_access_token(
         identity=str(user.id),
         additional_claims={'purpose': 'password_reset'},
         expires_delta=timedelta(hours=1)
     )
-    
-    return jsonify({
-        'message': 'Если email существует в системе, инструкции будут отправлены',
-        'reset_token': reset_token,
-        'reset_url': f'{request.host_url}reset-password?token={reset_token}'
-    }), 200
+
+    frontend_url = os.environ.get('FRONTEND_URL') or current_app.config.get('FRONTEND_URL', request.host_url.rstrip('/'))
+    reset_url = f'{frontend_url}/reset-password?token={reset_token}'
+    print(f'[PasswordReset] Reset URL: {reset_url}')
+    sent = _send_reset_email(email, reset_url)
+
+    res = {'message': 'Если email существует в системе, инструкции будут отправлены'}
+    if not sent:
+        res['reset_url'] = reset_url
+
+    return jsonify(res), 200
 
 
 @auth_bp.route('/reset-password', methods=['POST'])

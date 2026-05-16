@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../utils/api'
-import { Mail, AlertCircle, CheckCircle } from 'lucide-react'
+import { Mail, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [resetUrl, setResetUrl] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -15,7 +16,10 @@ export default function ForgotPassword() {
     setLoading(true)
 
     try {
-      await api.post('/auth/forgot-password', { email })
+      const res = await api.post('/auth/forgot-password', { email })
+      if (res.data.reset_url) {
+        setResetUrl(res.data.reset_url)
+      }
       setSuccess(true)
     } catch (err) {
       setError(err.response?.data?.error || 'Произошла ошибка')
@@ -35,6 +39,20 @@ export default function ForgotPassword() {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Если email существует в системе, на него отправлены инструкции по восстановлению пароля.
           </p>
+          {resetUrl && (
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg text-left">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium mb-2">Режим разработки (SMTP не настроен)</p>
+              <a
+                href={resetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline break-all inline-flex items-center gap-1"
+              >
+                {resetUrl}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          )}
           <Link to="/login" className="btn-primary inline-block">
             Вернуться ко входу
           </Link>

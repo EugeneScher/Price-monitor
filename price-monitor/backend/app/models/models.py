@@ -53,7 +53,7 @@ class Analysis(db.Model):
             'queries': self.queries.split('\n') if self.queries else [],
             'user_site': self.user_site,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'competitors_count': self.competitors.count()
+            'competitors_count': self.competitors.filter_by(is_user_site=False).count()
         }
 
 

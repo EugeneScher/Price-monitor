@@ -16,6 +16,7 @@ class Config:
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    FRONTEND_URL = os.environ.get('FRONTEND_URL') or 'http://localhost:3000'
     
     PARSER_DELAY = 2
     MAX_POSITIONS = 10
